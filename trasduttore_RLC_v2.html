@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trasduttore di pressione extravascolare – analogo RLC</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#0a101c; --bg2:#16233d; --card:#111a2b; --card2:#0d1524; --ink:#e6eaf2; --mute:#8b96aa; --line:#22314b;
+    --in:#7dd3fc; --out:#fb7185; --accent:#2dd4bf; --warn:#fbbf24; --bad:#f87171;
+  }
+  /* tema chiaro: stesse tinte dello Swan-Ganz; monitor e scena restano scuri come un apparecchio reale */
+  body.light-theme{
+    color-scheme:light;
+    --bg:#f1f5f9; --bg2:#e2e8f0; --card:#ffffff; --card2:#f1f5f9; --ink:#0f172a; --mute:#475569; --line:#cbd5e1;
+    --in:#0284c7; --out:#e11d48; --accent:#0f766e; --warn:#b45309; --bad:#b91c1c;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(1200px 600px at 20% -10%,var(--bg2) 0%,var(--bg) 60%);color:var(--ink);font-size:14px;min-height:100vh}
+  header{padding:12px 24px 4px}
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-bottom:10px}
+  .topbar .spacer{flex:1}
+  .back{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-weight:650;text-decoration:none;font-size:13.5px}
+  .back:hover{background:color-mix(in srgb,var(--accent) 24%,transparent)}
+  .scenb{border:1px solid var(--line);background:var(--card2);color:var(--mute);font-weight:500}
+  .hbtn,#langSel{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--card2);color:var(--ink);border-radius:7px;padding:5px 9px}
+  .hbtn:hover{border-color:var(--accent)}
+  h1{font-size:20px;margin:0 0 4px;font-weight:650;letter-spacing:.01em}
+  header p{margin:0;color:var(--mute);max-width:980px;line-height:1.45}
+  .page{padding:12px 24px 28px;display:grid;gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+  .card h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:0 0 10px;font-weight:600}
+  .row{display:grid;gap:16px}
+  .r2{grid-template-columns:320px minmax(0,1fr)}
+  .r3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  @media (max-width:1000px){.r2,.r3{grid-template-columns:1fr}}
+  @media (max-width:560px){header,.page{padding-left:12px;padding-right:12px}.hbtn .bt{display:none}}
+  canvas{width:100%;max-width:100%;display:block;min-width:0}
+  .ctrl{margin-bottom:13px}
+  .ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;margin-bottom:3px}
+  .ctrl label .v{font-variant-numeric:tabular-nums;font-weight:500;color:var(--accent)}
+  .ctrl small{display:block;color:var(--mute);margin-top:1px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  button{font:inherit;cursor:pointer}
+  .presets button,.seg button{border:1px solid var(--line);background:var(--card2);color:var(--ink);border-radius:7px;padding:5px 9px;font-size:12.5px}
+  .presets button:hover,.seg button:hover{border-color:var(--accent);color:var(--accent)}
+  .seg{display:flex;gap:4px;flex-wrap:wrap}
+  .seg button.on{background:var(--accent);color:#04201c;border-color:var(--accent);font-weight:600}
+  body.light-theme .seg button.on{color:#fff}
+  .flush{width:100%;padding:12px;border-radius:10px;border:0;background:linear-gradient(180deg,#38bdf8,#0284c7);color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em;box-shadow:0 4px 18px rgba(56,189,248,.25)}
+  .flush:disabled{opacity:.55;cursor:wait}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+  .stat b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+  .stat span{color:var(--mute);font-size:12px}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .sub{color:var(--mute);font-size:12.5px;margin:0 0 8px;line-height:1.4}
+  .monitor{background:#03070d;border:1px solid #1b2a40;border-radius:10px;padding:8px;display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:8px}
+  .monitor>*{min-width:0}
+  .num{display:flex;flex-direction:column;justify-content:center;font-variant-numeric:tabular-nums;color:#fb7185}
+  .num .lab{font-size:12px;letter-spacing:.1em;font-weight:700}
+  .num .big{font-size:34px;font-weight:700;line-height:1.05}
+  .num .mean{font-size:20px}
+  .num .real{color:#7dd3fc;font-size:12px;margin-top:8px}
+  .eq{font-family:"Cambria Math",Georgia,serif;font-size:15px;line-height:1.7}
+  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+  td,th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
+  th{color:var(--mute);font-weight:600}
+  details summary{cursor:pointer;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+  .est{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+  .legend{display:flex;gap:14px;color:var(--mute);font-size:12px;margin:6px 2px 0;flex-wrap:wrap}
+  .legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+  .modetabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  @media (max-width:560px){.modetabs{grid-template-columns:minmax(0,1fr)}}
+  .modetabs button{border:1px solid var(--line);background:var(--card2);color:var(--ink);border-radius:9px;padding:10px 12px;font-weight:650;font-size:14px;text-align:left;line-height:1.3}
+  .modetabs button small{display:block;font-weight:500;font-size:12px;color:var(--mute);margin-top:2px}
+  .modetabs button:hover{border-color:var(--accent)}
+  .modetabs button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--card2))}
+  .modetabs button.on small{color:var(--ink)}
+  /* comandi: trascinare un cursore non deve selezionare il testo vicino */
+  button,input[type=range],select,.ctrl label,.presets,.seg,.modetabs,.topbar,canvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  input[type=range]{touch-action:pan-y}
+  body.dragging,body.dragging *{-webkit-user-select:none !important;user-select:none !important;cursor:grabbing}
+  /* smartphone: la scena si scorre in orizzontale (scritte leggibili), il monitor mette i numeri sotto il tracciato */
+  .scenewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .scrollhint{display:none;color:var(--mute);font-size:11.5px;margin:4px 2px 0}
+  @media (max-width:600px){
+    #scene{min-width:620px}
+    .scrollhint{display:block}
+    .monitor{grid-template-columns:minmax(0,1fr)}
+    .num{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
+    .num .lab{flex-basis:100%}
+    .num .real{margin-top:0}
+    .stats{grid-template-columns:minmax(0,1fr)}
+  }
+  .lin{margin-top:10px;padding:8px 10px;border-left:3px solid var(--accent);background:var(--card2);border-radius:0 8px 8px 0}
+  .num .err{color:#fbbf24;font-size:12px;margin-top:2px}
+  footer{padding:4px 24px 28px;color:var(--mute);font-size:12.5px;display:grid;gap:10px}
+  footer ul{margin:8px 0 0;padding-left:20px;display:grid;gap:4px;line-height:1.45}
+  footer cite{font-style:italic}
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <a class="back" id="backBtn" href="Simulatore%20Termodiluizione%20Swan-Ganz_v8.html#posizionamento" data-i="back" hidden>← Torna al simulatore Swan-Ganz</a>
+    <span class="badge scenb" id="scenBadge" hidden></span>
+    <span class="spacer"></span>
+    <button class="hbtn" id="themeBtn" type="button" aria-pressed="false" data-i="themeBtn">☀️/🌙<span class="bt"> Tema</span></button>
+    <select id="langSel" aria-label="Lingua / Language"><option value="it">IT</option><option value="en">EN</option><option value="fr">FR</option><option value="de">DE</option><option value="es">ES</option></select>
+  </div>
+  <h1 data-i="h1">Trasduttore di pressione extravascolare come circuito RLC</h1>
+  <p data-i="intro">Arteria → catetere pieno di soluzione fisiologica (attrito <b>R<sub>c</sub></b>, inerzia <b>L<sub>c</sub></b>) → camera del trasduttore con diaframma estensimetrico (compliance <b>C<sub>d</sub></b>). Il trasduttore legge la pressione che deforma il diaframma: un oscillatore del secondo ordine forzato dalla pressione arteriosa.</p>
+</header>
+
+<div class="page">
+  <!-- SEZIONI: stesso modello RLC, due contesti clinici con preset, pressioni ed etichette proprie -->
+  <div class="card" style="padding:10px 12px">
+    <div class="modetabs" role="tablist" aria-label="Sezione">
+      <button type="button" role="tab" data-mode="pa" data-i="mPa">Cateterismo di Swan-Ganz<small>Arteria polmonare · catetere 110 cm</small></button>
+      <button type="button" role="tab" data-mode="art" data-i="mArt">Pressione arteriosa sistemica<small>Arteria radiale · cannula 20 G</small></button>
+    </div>
+    <p class="sub" id="modeHint" style="margin:8px 2px 0"></p>
+  </div>
+
+  <!-- SCENA -->
+  <div class="card" style="padding:10px">
+    <div class="scenewrap"><canvas id="scene"></canvas></div>
+    <p class="scrollhint" data-i="scrollHint">↔ Scorri lo schema in orizzontale</p>
+  </div>
+
+  <div class="row r2">
+    <!-- CONTROLLI -->
+    <div class="card">
+      <h2 data-i="hParams">Parametri del sistema</h2>
+      <div class="presets" data-mode="art">
+        <button data-p="std" data-i="pStd">Standard</button>
+        <button data-p="opt" data-i="pOpt">Ottimale</button>
+        <button data-p="long" data-i="pLong">Catetere lungo</button>
+        <button data-p="bubble" data-i="pBubble">Bolla d'aria</button>
+        <button data-p="clot" data-i="pClot">Coagulo / kinking</button>
+      </div>
+      <div class="presets" data-mode="pa">
+        <button data-p="pa_std" data-i="pPaStd">Swan-Ganz PAP</button>
+        <button data-p="pa_opt" data-i="pPaOpt">Swan-Ganz ottimale</button>
+        <button data-p="pa_long" data-i="pPaLong">Prolunghe e rubinetti</button>
+        <button data-p="pa_bubble" data-i="pBubble">Bolla d'aria</button>
+        <button data-p="pa_clot" data-i="pPaClot">Coagulo nel lume</button>
+      </div>
+      <div class="ctrl"><label><span data-i="lR">R<sub>c</sub> – attrito</span> <span class="v" id="vR"></span></label>
+        <input type="range" id="R" min="0" max="1000"><small>mmHg·s/mL · R = 8ηl/(πr⁴)</small></div>
+      <div class="ctrl"><label><span data-i="lL">L<sub>c</sub> – inerzia</span> <span class="v" id="vL"></span></label>
+        <input type="range" id="L" min="0" max="1000"><small>mmHg·s²/mL · L = ρl/(πr²)</small></div>
+      <div class="ctrl"><label><span data-i="lC">C<sub>d</sub> – compliance</span> <span class="v" id="vC"></span></label>
+        <input type="range" id="C" min="0" max="1000"><small>µL/mmHg · C = ΔV/ΔP</small></div>
+
+      <h2 style="margin-top:18px" data-i="hPat">Paziente</h2>
+      <div class="ctrl"><label><span data-i="lHR">Frequenza cardiaca</span> <span class="v" id="vHR"></span></label>
+        <input type="range" id="HR" min="40" max="180" value="75"></div>
+      <!-- intervalli estesi verso il basso per le pressioni polmonari (Swan-Ganz) -->
+      <div class="ctrl"><label><span data-i="lPs">Sistolica reale</span> <span class="v" id="vPs"></span></label>
+        <input type="range" id="Ps" min="15" max="220" value="120"></div>
+      <div class="ctrl"><label><span data-i="lPd">Diastolica reale</span> <span class="v" id="vPd"></span></label>
+        <input type="range" id="Pd" min="4" max="120" value="80"></div>
+
+      <h2 style="margin-top:18px" data-i="hSim">Simulazione</h2>
+      <div class="ctrl"><label data-i="lSpeed">Velocità</label>
+        <div class="seg" id="speed">
+          <button data-s="1" class="on">1×</button><button data-s="0.5" data-i="s05">0,5×</button>
+          <button data-s="0.25" data-i="s025">0,25×</button><button data-s="0.1" data-i="s01">0,1×</button>
+          <button data-s="0" id="pause" data-i="pause">❚❚ Pausa</button>
+        </div>
+        <small style="margin-top:6px" data-i="slowHint">Al rallentatore si vede bene il diaframma che oscilla e la colonna liquida che va avanti e indietro.</small>
+      </div>
+    </div>
+
+    <!-- MONITOR + FLUSH -->
+    <div class="row" style="gap:16px">
+      <div class="card">
+        <h2 data-i="hMon">Monitor</h2>
+        <div class="monitor">
+          <canvas id="mon" height="230"></canvas>
+          <div class="num">
+            <div class="lab" id="monLab">ART · mmHg</div>
+            <div class="big" id="nSD">—/—</div>
+            <div class="mean" id="nM">(—)</div>
+            <div class="real" id="nReal"></div>
+            <div class="err" id="nErr"></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#fb7185"></i><span data-i="legRead">Pressione letta dal trasduttore</span></span>
+          <span><i style="background:#7dd3fc;opacity:.7"></i><span id="legReal">Pressione arteriosa reale</span></span>
+        </div>
+      </div>
+
+      <div class="row r3">
+        <div class="card">
+          <h2 data-i="hFlush">Fast-flush test (onda quadra)</h2>
+          <button class="flush" id="btnFlush">⚡ Fast flush</button>
+          <p class="sub" style="margin-top:8px" data-i="flushHint">Apre per 0,5 s la valvola della sacca a 300 mmHg e poi la rilascia di colpo. Dalle oscillazioni dopo il rilascio si stimano:<br>
+            ζ = −ln r / √(π² + ln² r), con r = rapporto tra due picchi successivi;<br>
+            f<sub>n</sub> = f<sub>d</sub> / √(1−ζ²), con f<sub>d</sub> = 1 / periodo delle oscillazioni.</p>
+          <div class="est">
+            <div class="stat"><span data-i="eFnL">f<sub>n</sub> stimata</span><b id="eFn">—</b><span id="eFnT"></span></div>
+            <div class="stat"><span data-i="eZL">ζ stimato</span><b id="eZ">—</b><span id="eZT"></span></div>
+          </div>
+          <p class="sub" id="eMsg" style="margin-top:8px"></p>
+        </div>
+        <div class="card">
+          <h2 data-i="hCap">Registrazione del flush</h2>
+          <canvas id="cap" height="250"></canvas>
+          <p class="sub" style="margin-top:6px" data-i="capHint">I punti gialli segnano i picchi successivi usati per la stima.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row r3">
+    <div class="card">
+      <h2 data-i="hTheo">Parametri teorici</h2>
+      <div class="eq">f<sub>n</sub> = 1 / (2π√(L<sub>c</sub>C<sub>d</sub>)) &nbsp;&nbsp; ζ = (R<sub>c</sub>/2)·√(C<sub>d</sub>/L<sub>c</sub>)</div>
+      <div class="stats" style="margin-top:8px">
+        <div class="stat"><span data-i="sFnL">Frequenza naturale</span><b id="sFn"></b></div>
+        <div class="stat"><span data-i="sZL">Smorzamento ζ</span><b id="sZ"></b></div>
+        <div class="stat"><span data-i="sPkL">Picco di risonanza</span><b id="sPk"></b></div>
+      </div>
+      <p style="margin:12px 0 4px"><span data-i="regL">Regime:</span> <span class="badge" id="sReg"></span></p>
+      <p class="sub" id="sMsg"></p>
+      <p class="sub lin" data-i="linNote">f<sub>n</sub> e ζ dipendono solo da R<sub>c</sub>, L<sub>c</sub> e C<sub>d</sub>: il sistema è lineare, quindi alzare o abbassare la pressione non li cambia. Con la pressione cambia l'errore in mmHg, che cresce con la differenziale (vedi «errore sist.» sul monitor); con la frequenza cardiaca cambiano le armoniche da riprodurre (banda verde e mappa di Gardner).</p>
+      <h2 style="margin-top:14px" data-i="hBode">Risposta in frequenza</h2>
+      <canvas id="cvA" height="170"></canvas>
+      <canvas id="cvP" height="110" style="margin-top:4px"></canvas>
+      <p class="sub" style="margin-top:6px" data-i="bodeHint">Banda verde: prime 10 armoniche della frequenza cardiaca.</p>
+    </div>
+    <div class="card">
+      <h2 data-i="hGard">Mappa di adeguatezza f<sub>n</sub> – ζ</h2>
+      <p class="sub" data-i="gardHint">Stile Gardner, calcolata per la FC scelta: errore d'ampiezza massimo sulle prime 10 armoniche.
+        <span style="color:#2dd4bf">■</span> ≤ 5 % &nbsp;<span style="color:#fbbf24">■</span> ≤ 15 % &nbsp;<span style="color:#f87171">■</span> &gt; 15 %.
+        ● sistema teorico &nbsp; ◯ stima dal fast-flush.</p>
+      <canvas id="cvG" height="300"></canvas>
+      <details style="margin-top:14px">
+        <summary data-i="circSum">Circuito equivalente e analogie</summary>
+        <svg viewBox="0 0 520 190" width="100%" style="max-height:200px;margin-top:8px;color:var(--ink)">
+          <g fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="60" cy="105" r="24"/><path d="M60 81 V40 H120"/><path d="M60 129 V170 H440 V145"/>
+            <path d="M120 40 l6 -10 l12 20 l12 -20 l12 20 l12 -20 l12 20 l6 -10"/><path d="M192 40 H230"/>
+            <path d="M230 40 a10 10 0 0 1 20 0 a10 10 0 0 1 20 0 a10 10 0 0 1 20 0 a10 10 0 0 1 20 0"/>
+            <path d="M310 40 H440 V92"/><path d="M412 92 H468 M412 145 H468" stroke-width="3"/>
+          </g>
+          <g font-family="system-ui" font-size="13" fill="currentColor">
+            <text x="60" y="110" text-anchor="middle" font-size="16">~</text>
+            <text x="10" y="66">P<tspan font-size="10" dy="3">art</tspan></text>
+            <text x="156" y="72" text-anchor="middle">R<tspan font-size="10" dy="3">c</tspan></text>
+            <text x="270" y="72" text-anchor="middle">L<tspan font-size="10" dy="3">c</tspan></text>
+            <text x="478" y="123">C<tspan font-size="10" dy="3">d</tspan></text>
+            <text x="330" y="28" fill="#2dd4bf" font-size="12" data-i="svgQ">Q (flusso) →</text>
+            <text x="400" y="123" text-anchor="end" fill="#fb7185" font-size="12" data-i="svgP">P misurata</text>
+          </g>
+        </svg>
+        <div class="eq">L<sub>c</sub>C<sub>d</sub>·P̈<sub>m</sub> + R<sub>c</sub>C<sub>d</sub>·Ṗ<sub>m</sub> + P<sub>m</sub> = P<sub>art</sub>(t)</div>
+        <table>
+          <tr><th data-i="thEl">Elettrico</th><th data-i="thHy">Idraulico</th></tr>
+          <tr><td data-i="tV">Tensione V</td><td data-i="tP">Pressione P</td></tr>
+          <tr><td data-i="tI">Corrente I</td><td data-i="tQ">Flusso Q = C<sub>d</sub>·dP<sub>m</sub>/dt</td></tr>
+          <tr><td data-i="tR">Resistenza R</td><td data-i="tRc">Attrito viscoso nel catetere R<sub>c</sub></td></tr>
+          <tr><td data-i="tL">Induttanza L</td><td data-i="tLc">Inerzia della colonna liquida L<sub>c</sub></td></tr>
+          <tr><td data-i="tC">Capacità C</td><td data-i="tCd">Compliance del diaframma C<sub>d</sub></td></tr>
+        </table>
+      </details>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span data-i="foot">Laboratorio del trasduttore · Simulatore didattico interdisciplinare: medicina, infermieristica, ingegneria biomedica – Sviluppato da Fabrizio Maria Spera</span>
+  <span data-i="disc">Strumento esclusivamente didattico: non è un dispositivo medico e non va usato per decisioni cliniche.</span>
+  <details>
+    <summary data-i="biblio">Bibliografia essenziale</summary>
+    <ul>
+      <li>Gardner RM. Direct blood pressure measurement—dynamic response requirements. <cite>Anesthesiology</cite> 1981;54(3):227-236.</li>
+      <li>Kleinman B, Powell S, Kumar P, Gardner RM. The fast flush test measures the dynamic response of the entire blood pressure monitoring system. <cite>Anesthesiology</cite> 1992;77(6):1215-1220.</li>
+      <li>Geddes LA. <cite>Handbook of Blood Pressure Measurement</cite>. Clifton (NJ): Humana Press; 1991.</li>
+    </ul>
+  </details>
+</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+// ================= LINGUA (stessa filosofia dello Swan-Ganz: [italiano o @id, inglese, francese, tedesco, spagnolo]) =================
+const ROWS=[
+[`Trasduttore di pressione extravascolare – analogo RLC`,`Extravascular pressure transducer – RLC analogue`,`Capteur de pression extravasculaire – analogue RLC`,`Extravasaler Druckaufnehmer – RLC-Analogon`,`Transductor de presión extravascular – análogo RLC`],
+[`@back`,`← Back to the Swan-Ganz simulator`,`← Retour au simulateur Swan-Ganz`,`← Zurück zum Swan-Ganz-Simulator`,`← Volver al simulador Swan-Ganz`],
+[`@themeBtn`,`☀️/🌙<span class="bt"> Theme</span>`,`☀️/🌙<span class="bt"> Thème</span>`,`☀️/🌙<span class="bt"> Design</span>`,`☀️/🌙<span class="bt"> Tema</span>`],
+[`@h1`,`Extravascular pressure transducer as an RLC circuit`,`Capteur de pression extravasculaire comme circuit RLC`,`Extravasaler Druckaufnehmer als RLC-Kreis`,`Transductor de presión extravascular como circuito RLC`],
+[`@intro`,`Artery → saline-filled catheter (friction <b>R<sub>c</sub></b>, inertance <b>L<sub>c</sub></b>) → transducer chamber with strain-gauge diaphragm (compliance <b>C<sub>d</sub></b>). The transducer reads the pressure that deforms the diaphragm: a second-order oscillator driven by the arterial pressure.`,`Artère → cathéter rempli de sérum physiologique (frottement <b>R<sub>c</sub></b>, inertance <b>L<sub>c</sub></b>) → chambre du capteur avec membrane à jauges de contrainte (compliance <b>C<sub>d</sub></b>). Le capteur lit la pression qui déforme la membrane : un oscillateur du second ordre forcé par la pression artérielle.`,`Arterie → mit Kochsalzlösung gefüllter Katheter (Reibung <b>R<sub>c</sub></b>, Inertanz <b>L<sub>c</sub></b>) → Kammer des Druckaufnehmers mit Dehnungsmessstreifen-Membran (Compliance <b>C<sub>d</sub></b>). Der Druckaufnehmer misst den Druck, der die Membran verformt: ein Oszillator zweiter Ordnung, angeregt durch den arteriellen Druck.`,`Arteria → catéter lleno de suero fisiológico (rozamiento <b>R<sub>c</sub></b>, inertancia <b>L<sub>c</sub></b>) → cámara del transductor con diafragma extensométrico (distensibilidad <b>C<sub>d</sub></b>). El transductor lee la presión que deforma el diafragma: un oscilador de segundo orden forzado por la presión arterial.`],
+[`@scrollHint`,`↔ Scroll the diagram sideways`,`↔ Faites défiler le schéma horizontalement`,`↔ Schema seitlich verschieben`,`↔ Desliza el esquema en horizontal`],
+[`@hParams`,`System parameters`,`Paramètres du système`,`Systemparameter`,`Parámetros del sistema`],
+[`@pStd`,`Standard`,`Standard`,`Standard`,`Estándar`],
+[`@pOpt`,`Optimal`,`Optimal`,`Optimal`,`Óptimo`],
+[`@pLong`,`Long catheter`,`Cathéter long`,`Langer Katheter`,`Catéter largo`],
+[`@pBubble`,`Air bubble`,`Bulle d'air`,`Luftblase`,`Burbuja de aire`],
+[`@pClot`,`Clot / kinking`,`Caillot / coudure`,`Gerinnsel / Abknickung`,`Coágulo / acodamiento`],
+[`@pPaStd`,`Swan-Ganz PAP`,`Swan-Ganz PAP`,`Swan-Ganz PAP`,`Swan-Ganz PAP`],
+[`@pPaOpt`,`Swan-Ganz optimal`,`Swan-Ganz optimal`,`Swan-Ganz optimal`,`Swan-Ganz óptimo`],
+[`@pPaLong`,`Extensions and stopcocks`,`Prolongateurs et robinets`,`Verlängerungen und Dreiwegehähne`,`Alargaderas y llaves`],
+[`@pPaClot`,`Clot in the lumen`,`Caillot dans la lumière`,`Gerinnsel im Lumen`,`Coágulo en la luz`],
+[`@mPa`,`Swan-Ganz catheterisation<small>Pulmonary artery · 110 cm catheter</small>`,`Cathétérisme de Swan-Ganz<small>Artère pulmonaire · cathéter de 110 cm</small>`,`Swan-Ganz-Katheterisierung<small>Pulmonalarterie · 110-cm-Katheter</small>`,`Cateterismo de Swan-Ganz<small>Arteria pulmonar · catéter de 110 cm</small>`],
+[`@mArt`,`Systemic arterial pressure<small>Radial artery · 20 G cannula</small>`,`Pression artérielle systémique<small>Artère radiale · canule 20 G</small>`,`Systemischer arterieller Druck<small>Arteria radialis · 20-G-Kanüle</small>`,`Presión arterial sistémica<small>Arteria radial · cánula 20 G</small>`],
+[`Catetere di Swan-Ganz: 110 cm, lume distale 7–7,5 F. Inerzia e attrito maggiori di una cannula arteriosa danno una fn più bassa (circa 10 Hz). Le pressioni polmonari sono basse: pochi mmHg di errore cambiano la lettura, e uno smorzamento eccessivo può far sembrare incuneata una curva di arteria polmonare.`,`Swan-Ganz catheter: 110 cm, 7–7.5 F distal lumen. Higher inertance and friction than an arterial cannula give a lower fn (about 10 Hz). Pulmonary pressures are low: a few mmHg of error change the reading, and excessive damping can make a pulmonary artery trace look wedged.`,`Cathéter de Swan-Ganz : 110 cm, lumière distale 7–7,5 F. Inertance et frottement plus élevés qu'une canule artérielle donnent une fn plus basse (environ 10 Hz). Les pressions pulmonaires sont basses : quelques mmHg d'erreur changent la lecture, et un amortissement excessif peut faire paraître occluse une courbe artérielle pulmonaire.`,`Swan-Ganz-Katheter: 110 cm, distales Lumen 7–7,5 F. Höhere Inertanz und Reibung als bei einer arteriellen Kanüle ergeben eine niedrigere fn (etwa 10 Hz). Die pulmonalen Drücke sind niedrig: Wenige mmHg Fehler verändern die Ablesung, und eine zu starke Dämpfung kann eine Pulmonalarterienkurve wie eine Wedge-Kurve aussehen lassen.`,`Catéter de Swan-Ganz: 110 cm, luz distal 7–7,5 F. Una inertancia y un rozamiento mayores que los de una cánula arterial dan una fn más baja (unos 10 Hz). Las presiones pulmonares son bajas: unos pocos mmHg de error cambian la lectura, y un amortiguamiento excesivo puede hacer que una curva de arteria pulmonar parezca enclavada.`],
+[`Cannula arteriosa radiale (20 G) con prolunga corta e rigida: fn più alta (15–20 Hz). Un sistema sottosmorzato sovrastima la sistolica, uno sovrasmorzato la sottostima; la pressione media resta affidabile in entrambi i casi.`,`Radial arterial cannula (20 G) with a short, stiff extension: higher fn (15–20 Hz). An underdamped system overestimates systolic pressure, an overdamped one underestimates it; the mean pressure stays reliable in both cases.`,`Canule artérielle radiale (20 G) avec un prolongateur court et rigide : fn plus élevée (15–20 Hz). Un système sous-amorti surestime la systolique, un système suramorti la sous-estime ; la pression moyenne reste fiable dans les deux cas.`,`Radialis-Kanüle (20 G) mit kurzer, steifer Verlängerung: höhere fn (15–20 Hz). Ein unterdämpftes System überschätzt den systolischen Druck, ein überdämpftes unterschätzt ihn; der Mitteldruck bleibt in beiden Fällen zuverlässig.`,`Cánula arterial radial (20 G) con alargadera corta y rígida: fn más alta (15–20 Hz). Un sistema subamortiguado sobrestima la sistólica y uno sobreamortiguado la infraestima; la presión media sigue siendo fiable en ambos casos.`],
+[`@linNote`,`f<sub>n</sub> and ζ depend only on R<sub>c</sub>, L<sub>c</sub> and C<sub>d</sub>: the system is linear, so raising or lowering the pressure does not change them. What changes with pressure is the error in mmHg, which grows with the pulse pressure (see “systolic error” on the monitor); with heart rate, the harmonics to be reproduced change (green band and Gardner chart).`,`f<sub>n</sub> et ζ ne dépendent que de R<sub>c</sub>, L<sub>c</sub> et C<sub>d</sub> : le système est linéaire, donc augmenter ou diminuer la pression ne les modifie pas. Avec la pression change l'erreur en mmHg, qui croît avec la pression différentielle (voir « erreur syst. » sur le moniteur) ; avec la fréquence cardiaque changent les harmoniques à reproduire (bande verte et abaque de Gardner).`,`f<sub>n</sub> und ζ hängen nur von R<sub>c</sub>, L<sub>c</sub> und C<sub>d</sub> ab: Das System ist linear, daher ändert ein höherer oder niedrigerer Druck sie nicht. Mit dem Druck ändert sich der Fehler in mmHg, der mit der Druckamplitude wächst (siehe „Fehler syst.“ am Monitor); mit der Herzfrequenz ändern sich die wiederzugebenden Harmonischen (grünes Band und Gardner-Diagramm).`,`f<sub>n</sub> y ζ dependen solo de R<sub>c</sub>, L<sub>c</sub> y C<sub>d</sub>: el sistema es lineal, así que subir o bajar la presión no los cambia. Con la presión cambia el error en mmHg, que crece con la presión diferencial (mira «error sist.» en el monitor); con la frecuencia cardiaca cambian los armónicos que hay que reproducir (banda verde y diagrama de Gardner).`],
+[`errore sist. {0} mmHg`,`systolic error {0} mmHg`,`erreur syst. {0} mmHg`,`Fehler syst. {0} mmHg`,`error sist. {0} mmHg`],
+[`arteria radiale`,`radial artery`,`artère radiale`,`Arteria radialis`,`arteria radial`],
+[`catetere di Swan-Ganz (110 cm) con soluzione fisiologica`,`Swan-Ganz catheter (110 cm) filled with saline`,`cathéter de Swan-Ganz (110 cm) rempli de sérum physiologique`,`Swan-Ganz-Katheter (110 cm) mit Kochsalzlösung`,`catéter de Swan-Ganz (110 cm) con suero fisiológico`],
+[`cannula e prolunga con soluzione fisiologica`,`cannula and extension filled with saline`,`canule et prolongateur remplis de sérum physiologique`,`Kanüle und Verlängerung mit Kochsalzlösung`,`cánula y alargadera con suero fisiológico`],
+[`deflessione ∝ Cd·P = {0} µL`,`deflection ∝ Cd·P = {0} µL`,`déflexion ∝ Cd·P = {0} µL`,`Auslenkung ∝ Cd·P = {0} µL`,`deflexión ∝ Cd·P = {0} µL`],
+[`@lR`,`R<sub>c</sub> – friction`,`R<sub>c</sub> – frottement`,`R<sub>c</sub> – Reibung`,`R<sub>c</sub> – rozamiento`],
+[`@lL`,`L<sub>c</sub> – inertance`,`L<sub>c</sub> – inertance`,`L<sub>c</sub> – Inertanz`,`L<sub>c</sub> – inertancia`],
+[`@lC`,`C<sub>d</sub> – compliance`,`C<sub>d</sub> – compliance`,`C<sub>d</sub> – Compliance`,`C<sub>d</sub> – distensibilidad`],
+[`@hPat`,`Patient`,`Patient`,`Patient`,`Paciente`],
+[`@lHR`,`Heart rate`,`Fréquence cardiaque`,`Herzfrequenz`,`Frecuencia cardiaca`],
+[`@lPs`,`True systolic`,`Systolique réelle`,`Wahrer systolischer Druck`,`Sistólica real`],
+[`@lPd`,`True diastolic`,`Diastolique réelle`,`Wahrer diastolischer Druck`,`Diastólica real`],
+[`@hSim`,`Simulation`,`Simulation`,`Simulation`,`Simulación`],
+[`@lSpeed`,`Speed`,`Vitesse`,`Geschwindigkeit`,`Velocidad`],
+[`@s05`,`0.5×`,`0,5×`,`0,5×`,`0,5×`],
+[`@s025`,`0.25×`,`0,25×`,`0,25×`,`0,25×`],
+[`@s01`,`0.1×`,`0,1×`,`0,1×`,`0,1×`],
+[`@pause`,`❚❚ Pause`,`❚❚ Pause`,`❚❚ Pause`,`❚❚ Pausa`],
+[`@slowHint`,`In slow motion you can clearly see the diaphragm oscillating and the fluid column moving back and forth.`,`Au ralenti, on voit bien la membrane osciller et la colonne de liquide aller et venir.`,`In Zeitlupe sieht man deutlich, wie die Membran schwingt und die Flüssigkeitssäule hin und her läuft.`,`A cámara lenta se ve bien cómo oscila el diafragma y cómo la columna de líquido va y viene.`],
+[`@hMon`,`Monitor`,`Moniteur`,`Monitor`,`Monitor`],
+[`@legRead`,`Pressure read by the transducer`,`Pression lue par le capteur`,`Vom Druckaufnehmer gemessener Druck`,`Presión leída por el transductor`],
+[`Pressione arteriosa reale`,`True arterial pressure`,`Pression artérielle réelle`,`Wahrer arterieller Druck`,`Presión arterial real`],
+[`Pressione arteriosa polmonare reale`,`True pulmonary artery pressure`,`Pression artérielle pulmonaire réelle`,`Wahrer Pulmonalarteriendruck`,`Presión arterial pulmonar real`],
+[`@hFlush`,`Fast-flush test (square wave)`,`Test de fast flush (onde carrée)`,`Fast-Flush-Test (Rechteckwelle)`,`Prueba de fast flush (onda cuadrada)`],
+[`⚡ Fast flush`,`⚡ Fast flush`,`⚡ Fast flush`,`⚡ Fast flush`,`⚡ Fast flush`],
+[`Flush in corso…`,`Flushing…`,`Rinçage en cours…`,`Spülung läuft…`,`Lavado en curso…`],
+[`@flushHint`,`Opens the valve of the 300 mmHg bag for 0.5 s and then releases it abruptly. From the oscillations after release we estimate:<br>ζ = −ln r / √(π² + ln² r), with r = ratio of two successive peaks;<br>f<sub>n</sub> = f<sub>d</sub> / √(1−ζ²), with f<sub>d</sub> = 1 / period of the oscillations.`,`Ouvre pendant 0,5 s la valve de la poche à 300 mmHg puis la relâche d'un coup. À partir des oscillations après le relâchement, on estime :<br>ζ = −ln r / √(π² + ln² r), avec r = rapport entre deux pics successifs ;<br>f<sub>n</sub> = f<sub>d</sub> / √(1−ζ²), avec f<sub>d</sub> = 1 / période des oscillations.`,`Öffnet das Ventil des 300-mmHg-Beutels für 0,5 s und lässt es dann schlagartig los. Aus den Schwingungen nach dem Loslassen werden geschätzt:<br>ζ = −ln r / √(π² + ln² r), mit r = Verhältnis zweier aufeinanderfolgender Spitzen;<br>f<sub>n</sub> = f<sub>d</sub> / √(1−ζ²), mit f<sub>d</sub> = 1 / Schwingungsperiode.`,`Abre durante 0,5 s la válvula de la bolsa a 300 mmHg y luego la suelta de golpe. A partir de las oscilaciones tras la liberación se estiman:<br>ζ = −ln r / √(π² + ln² r), con r = cociente entre dos picos sucesivos;<br>f<sub>n</sub> = f<sub>d</sub> / √(1−ζ²), con f<sub>d</sub> = 1 / periodo de las oscilaciones.`],
+[`@eFnL`,`Estimated f<sub>n</sub>`,`f<sub>n</sub> estimée`,`Geschätzte f<sub>n</sub>`,`f<sub>n</sub> estimada`],
+[`@eZL`,`Estimated ζ`,`ζ estimé`,`Geschätztes ζ`,`ζ estimado`],
+[`@hCap`,`Flush recording`,`Enregistrement du flush`,`Aufzeichnung des Flush`,`Registro del flush`],
+[`@capHint`,`The yellow dots mark the successive peaks used for the estimate.`,`Les points jaunes marquent les pics successifs utilisés pour l'estimation.`,`Die gelben Punkte markieren die aufeinanderfolgenden Spitzen, die für die Schätzung verwendet werden.`,`Los puntos amarillos marcan los picos sucesivos usados para la estimación.`],
+[`@hTheo`,`Theoretical parameters`,`Paramètres théoriques`,`Theoretische Parameter`,`Parámetros teóricos`],
+[`@sFnL`,`Natural frequency`,`Fréquence propre`,`Eigenfrequenz`,`Frecuencia natural`],
+[`@sZL`,`Damping ζ`,`Amortissement ζ`,`Dämpfung ζ`,`Amortiguamiento ζ`],
+[`@sPkL`,`Resonance peak`,`Pic de résonance`,`Resonanzüberhöhung`,`Pico de resonancia`],
+[`@regL`,`Regime:`,`Régime :`,`Bereich:`,`Régimen:`],
+[`@hBode`,`Frequency response`,`Réponse en fréquence`,`Frequenzgang`,`Respuesta en frecuencia`],
+[`@bodeHint`,`Green band: first 10 harmonics of the heart rate.`,`Bande verte : 10 premières harmoniques de la fréquence cardiaque.`,`Grünes Band: die ersten 10 Harmonischen der Herzfrequenz.`,`Banda verde: primeros 10 armónicos de la frecuencia cardiaca.`],
+[`@hGard`,`f<sub>n</sub> – ζ adequacy chart`,`Abaque d'adéquation f<sub>n</sub> – ζ`,`Eignungsdiagramm f<sub>n</sub> – ζ`,`Mapa de adecuación f<sub>n</sub> – ζ`],
+[`@gardHint`,`Gardner style, computed for the chosen HR: maximum amplitude error over the first 10 harmonics. <span style="color:#2dd4bf">■</span> ≤ 5 % &nbsp;<span style="color:#fbbf24">■</span> ≤ 15 % &nbsp;<span style="color:#f87171">■</span> &gt; 15 %. ● theoretical system &nbsp; ◯ fast-flush estimate.`,`Style Gardner, calculée pour la FC choisie : erreur d'amplitude maximale sur les 10 premières harmoniques. <span style="color:#2dd4bf">■</span> ≤ 5 % &nbsp;<span style="color:#fbbf24">■</span> ≤ 15 % &nbsp;<span style="color:#f87171">■</span> &gt; 15 %. ● système théorique &nbsp; ◯ estimation par fast flush.`,`Nach Gardner, berechnet für die gewählte HF: maximaler Amplitudenfehler über die ersten 10 Harmonischen. <span style="color:#2dd4bf">■</span> ≤ 5 % &nbsp;<span style="color:#fbbf24">■</span> ≤ 15 % &nbsp;<span style="color:#f87171">■</span> &gt; 15 %. ● theoretisches System &nbsp; ◯ Schätzung aus dem Fast Flush.`,`Estilo Gardner, calculado para la FC elegida: error de amplitud máximo en los primeros 10 armónicos. <span style="color:#2dd4bf">■</span> ≤ 5 % &nbsp;<span style="color:#fbbf24">■</span> ≤ 15 % &nbsp;<span style="color:#f87171">■</span> &gt; 15 %. ● sistema teórico &nbsp; ◯ estimación por fast flush.`],
+[`@circSum`,`Equivalent circuit and analogies`,`Circuit équivalent et analogies`,`Ersatzschaltbild und Analogien`,`Circuito equivalente y analogías`],
+[`@svgQ`,`Q (flow) →`,`Q (débit) →`,`Q (Fluss) →`,`Q (flujo) →`],
+[`@svgP`,`Measured P`,`P mesurée`,`Gemessenes P`,`P medida`],
+[`@thEl`,`Electrical`,`Électrique`,`Elektrisch`,`Eléctrico`],
+[`@thHy`,`Hydraulic`,`Hydraulique`,`Hydraulisch`,`Hidráulico`],
+[`@tV`,`Voltage V`,`Tension V`,`Spannung V`,`Tensión V`],
+[`@tP`,`Pressure P`,`Pression P`,`Druck P`,`Presión P`],
+[`@tI`,`Current I`,`Courant I`,`Strom I`,`Corriente I`],
+[`@tQ`,`Flow Q = C<sub>d</sub>·dP<sub>m</sub>/dt`,`Débit Q = C<sub>d</sub>·dP<sub>m</sub>/dt`,`Fluss Q = C<sub>d</sub>·dP<sub>m</sub>/dt`,`Flujo Q = C<sub>d</sub>·dP<sub>m</sub>/dt`],
+[`@tR`,`Resistance R`,`Résistance R`,`Widerstand R`,`Resistencia R`],
+[`@tRc`,`Viscous friction in the catheter R<sub>c</sub>`,`Frottement visqueux dans le cathéter R<sub>c</sub>`,`Viskose Reibung im Katheter R<sub>c</sub>`,`Rozamiento viscoso en el catéter R<sub>c</sub>`],
+[`@tL`,`Inductance L`,`Inductance L`,`Induktivität L`,`Inductancia L`],
+[`@tLc`,`Inertance of the fluid column L<sub>c</sub>`,`Inertance de la colonne de liquide L<sub>c</sub>`,`Trägheit der Flüssigkeitssäule L<sub>c</sub>`,`Inercia de la columna de líquido L<sub>c</sub>`],
+[`@tC`,`Capacitance C`,`Capacité C`,`Kapazität C`,`Capacidad C`],
+[`@tCd`,`Diaphragm compliance C<sub>d</sub>`,`Compliance de la membrane C<sub>d</sub>`,`Membrancompliance C<sub>d</sub>`,`Distensibilidad del diafragma C<sub>d</sub>`],
+[`@foot`,`Transducer lab · Interdisciplinary teaching simulator: medicine, nursing, biomedical engineering – Developed by Fabrizio Maria Spera`,`Laboratoire du capteur · Simulateur pédagogique interdisciplinaire : médecine, soins infirmiers, génie biomédical – Développé par Fabrizio Maria Spera`,`Druckaufnehmer-Labor · Interdisziplinärer Lehrsimulator: Medizin, Pflege, Biomedizinische Technik – Entwickelt von Fabrizio Maria Spera`,`Laboratorio del transductor · Simulador didáctico interdisciplinar: medicina, enfermería, ingeniería biomédica – Desarrollado por Fabrizio Maria Spera`],
+[`@disc`,`Teaching tool only: it is not a medical device and must not be used for clinical decisions.`,`Outil exclusivement pédagogique : ce n'est pas un dispositif médical et il ne doit pas servir à des décisions cliniques.`,`Ausschließlich Lehrwerkzeug: kein Medizinprodukt und nicht für klinische Entscheidungen bestimmt.`,`Herramienta exclusivamente didáctica: no es un dispositivo médico y no debe usarse para decisiones clínicas.`],
+[`@biblio`,`Key references`,`Bibliographie essentielle`,`Wichtigste Literatur`,`Bibliografía esencial`],
+// badge dello scenario ricevuto dallo Swan-Ganz
+[`Scenario Swan-Ganz: {0} · PAP {1}/{2} mmHg · FC {3}/min`,`Swan-Ganz scenario: {0} · PAP {1}/{2} mmHg · HR {3}/min`,`Scénario Swan-Ganz : {0} · PAP {1}/{2} mmHg · FC {3}/min`,`Swan-Ganz-Szenario: {0} · PAP {1}/{2} mmHg · HF {3}/min`,`Escenario Swan-Ganz: {0} · PAP {1}/{2} mmHg · FC {3}/min`],
+[`Scenario Swan-Ganz nascosto (Modalità Esame): PAP standard`,`Swan-Ganz scenario hidden (Exam Mode): standard PAP`,`Scénario Swan-Ganz masqué (mode Examen) : PAP standard`,`Swan-Ganz-Szenario verborgen (Prüfungsmodus): Standard-PAP`,`Escenario Swan-Ganz oculto (Modo Examen): PAP estándar`],
+[`Paziente sano`,`Healthy patient`,`Patient sain`,`Gesunder Patient`,`Paciente sano`],
+[`Shock cardiogeno`,`Cardiogenic shock`,`Choc cardiogénique`,`Kardiogener Schock`,`Shock cardiogénico`],
+[`Shock settico iperdinamico`,`Hyperdynamic septic shock`,`Choc septique hyperdynamique`,`Hyperdynamer septischer Schock`,`Shock séptico hiperdinámico`],
+[`Insufficienza tricuspidale severa`,`Severe tricuspid regurgitation`,`Insuffisance tricuspide sévère`,`Schwere Trikuspidalinsuffizienz`,`Insuficiencia tricuspídea grave`],
+// scena
+[`Cuore`,`Heart`,`Cœur`,`Herz`,`Corazón`],
+[`arteria polmonare`,`pulmonary artery`,`artère pulmonaire`,`Pulmonalarterie`,`arteria pulmonar`],
+[`Rc attrito · Lc inerzia`,`Rc friction · Lc inertance`,`Rc frottement · Lc inertance`,`Rc Reibung · Lc Inertanz`,`Rc rozamiento · Lc inertancia`],
+[`NaCl 0,9 % · 300 mmHg`,`NaCl 0.9 % · 300 mmHg`,`NaCl 0,9 % · 300 mmHg`,`NaCl 0,9 % · 300 mmHg`,`NaCl 0,9 % · 300 mmHg`],
+[`valvola flush`,`flush valve`,`valve de flush`,`Spülventil`,`válvula de flush`],
+[`Trasduttore (sezione)`,`Transducer (cross-section)`,`Capteur (coupe)`,`Druckaufnehmer (Schnitt)`,`Transductor (sección)`],
+[`camera con liquido`,`fluid chamber`,`chambre de liquide`,`Flüssigkeitskammer`,`cámara de líquido`],
+[`diaframma Cd + estensimetri`,`diaphragm Cd + strain gauges`,`membrane Cd + jauges de contrainte`,`Membran Cd + Dehnungsmessstreifen`,`diafragma Cd + galgas extensométricas`],
+[`P letta = {0} mmHg`,`P read = {0} mmHg`,`P lue = {0} mmHg`,`P gemessen = {0} mmHg`,`P leída = {0} mmHg`],
+// grafici
+[`Premi “Fast flush” per registrare la risposta`,`Press “Fast flush” to record the response`,`Appuyez sur « Fast flush » pour enregistrer la réponse`,`„Fast flush“ drücken, um die Antwort aufzuzeichnen`,`Pulsa «Fast flush» para registrar la respuesta`],
+[`valvola aperta`,`valve open`,`valve ouverte`,`Ventil offen`,`válvula abierta`],
+[`|P letta / P reale|`,`|P read / P true|`,`|P lue / P réelle|`,`|P gemessen / P wahr|`,`|P leída / P real|`],
+[`fase`,`phase`,`phase`,`Phase`,`fase`],
+// diagnostica dei parametri
+[`nessuno`,`none`,`aucun`,`keiner`,`ninguno`],
+[`Sottosmorzato`,`Underdamped`,`Sous-amorti`,`Unterdämpft`,`Subamortiguado`],
+[`Smorzamento ottimale`,`Optimal damping`,`Amortissement optimal`,`Optimale Dämpfung`,`Amortiguamiento óptimo`],
+[`Sovrasmorzato`,`Overdamped`,`Suramorti`,`Überdämpft`,`Sobreamortiguado`],
+[`Sovrasmorzato (aperiodico)`,`Overdamped (aperiodic)`,`Suramorti (apériodique)`,`Überdämpft (aperiodisch)`,`Sobreamortiguado (aperiódico)`],
+[`Oscillazioni (ringing): sistolica sovrastimata, diastolica sottostimata. Tipico di cateteri lunghi o rigidi e di raccordi multipli.`,`Oscillations (ringing): systolic overestimated, diastolic underestimated. Typical of long or stiff catheters and multiple connections.`,`Oscillations (ringing) : systolique surestimée, diastolique sous-estimée. Typique des cathéters longs ou rigides et des raccords multiples.`,`Schwingungen (Ringing): Systole überschätzt, Diastole unterschätzt. Typisch für lange oder steife Katheter und viele Verbindungsstücke.`,`Oscilaciones (ringing): sistólica sobrestimada, diastólica infraestimada. Típico de catéteres largos o rígidos y de conexiones múltiples.`],
+[`Ampiezza piatta fino a frequenze elevate e fase quasi lineare: l'onda viene riprodotta fedelmente.`,`Flat amplitude up to high frequencies and almost linear phase: the waveform is reproduced faithfully.`,`Amplitude plate jusqu'à des fréquences élevées et phase presque linéaire : l'onde est reproduite fidèlement.`,`Flacher Amplitudengang bis zu hohen Frequenzen und nahezu lineare Phase: Die Kurve wird getreu wiedergegeben.`,`Amplitud plana hasta frecuencias elevadas y fase casi lineal: la onda se reproduce fielmente.`],
+[`Onda smussata: sistolica sottostimata, diastolica sovrastimata, incisura dicrota persa.`,`Blunted waveform: systolic underestimated, diastolic overestimated, dicrotic notch lost.`,`Onde émoussée : systolique sous-estimée, diastolique surestimée, incisure dicrote perdue.`,`Abgeflachte Kurve: Systole unterschätzt, Diastole überschätzt, Inzisur verloren.`,`Onda amortiguada: sistólica infraestimada, diastólica sobrestimada, muesca dícrota perdida.`],
+[`Nessuna oscillazione e forte attenuazione: la media resta corretta ma la differenziale si comprime.`,`No oscillation and strong attenuation: the mean stays correct but the pulse pressure is compressed.`,`Aucune oscillation et forte atténuation : la moyenne reste correcte mais la pression différentielle se comprime.`,`Keine Schwingung und starke Dämpfung: Der Mitteldruck bleibt korrekt, aber die Druckamplitude wird gestaucht.`,`Ninguna oscilación y fuerte atenuación: la media sigue siendo correcta pero la presión diferencial se comprime.`],
+[` Attenzione: fn è sotto la 10ª armonica della FC ({0} Hz).`,` Warning: fn is below the 10th harmonic of the HR ({0} Hz).`,` Attention : fn est sous la 10e harmonique de la FC ({0} Hz).`,` Achtung: fn liegt unter der 10. Harmonischen der HF ({0} Hz).`,` Atención: fn está por debajo del 10.º armónico de la FC ({0} Hz).`],
+[` Sulla curva di arteria polmonare uno smorzamento eccessivo può simulare un incuneamento (pseudo-wedge).`,` On a pulmonary artery trace, excessive damping can mimic wedging (pseudo-wedge).`,` Sur une courbe artérielle pulmonaire, un amortissement excessif peut simuler une occlusion (pseudo-wedge).`,` An einer Pulmonalarterienkurve kann eine zu starke Dämpfung eine Wedge-Position vortäuschen (Pseudo-Wedge).`,` En una curva de arteria pulmonar, un amortiguamiento excesivo puede simular un enclavamiento (pseudo-wedge).`],
+// analisi del fast flush
+[`teorica {0}`,`theoretical {0}`,`théorique {0}`,`theoretisch {0}`,`teórica {0}`],
+[`teorico {0}`,`theoretical {0}`,`théorique {0}`,`theoretisch {0}`,`teórico {0}`],
+[`sistema sottosmorzato: troppe oscillazioni, la sistolica viene sovrastimata.`,`underdamped system: too many oscillations, systolic is overestimated.`,`système sous-amorti : trop d'oscillations, la systolique est surestimée.`,`unterdämpftes System: zu viele Schwingungen, die Systole wird überschätzt.`,`sistema subamortiguado: demasiadas oscilaciones, la sistólica se sobrestima.`],
+[`smorzamento adeguato: 1–2 oscillazioni e poi l'onda torna pulita.`,`adequate damping: 1–2 oscillations, then the waveform is clean again.`,`amortissement adéquat : 1 à 2 oscillations, puis l'onde redevient nette.`,`ausreichende Dämpfung: 1–2 Schwingungen, dann ist die Kurve wieder sauber.`,`amortiguamiento adecuado: 1–2 oscilaciones y luego la onda vuelve a ser limpia.`],
+[`smorzamento vicino al critico.`,`damping close to critical.`,`amortissement proche du critique.`,`Dämpfung nahe der kritischen.`,`amortiguamiento cercano al crítico.`],
+[`{0} oscillazione visibile dopo il rilascio (rapporto tra picchi r = {1}): {2}`,`{0} oscillation visible after release (peak ratio r = {1}): {2}`,`{0} oscillation visible après le relâchement (rapport des pics r = {1}) : {2}`,`{0} sichtbare Schwingung nach dem Loslassen (Spitzenverhältnis r = {1}): {2}`,`{0} oscilación visible tras la liberación (cociente de picos r = {1}): {2}`],
+[`{0} oscillazioni visibili dopo il rilascio (rapporto tra picchi r = {1}): {2}`,`{0} oscillations visible after release (peak ratio r = {1}): {2}`,`{0} oscillations visibles après le relâchement (rapport des pics r = {1}) : {2}`,`{0} sichtbare Schwingungen nach dem Loslassen (Spitzenverhältnis r = {1}): {2}`,`{0} oscilaciones visibles tras la liberación (cociente de picos r = {1}): {2}`],
+[`n.d.`,`n/a`,`n.d.`,`n. b.`,`n.d.`],
+[`Nessuna oscillazione misurabile dopo il rilascio: il sistema è sovrasmorzato (bolle, coaguli, catetere piegato), quindi né fn né ζ si possono ricavare dai picchi.`,`No measurable oscillation after release: the system is overdamped (bubbles, clots, kinked catheter), so neither fn nor ζ can be derived from the peaks.`,`Aucune oscillation mesurable après le relâchement : le système est suramorti (bulles, caillots, cathéter coudé), donc ni fn ni ζ ne peuvent être déduits des pics.`,`Keine messbare Schwingung nach dem Loslassen: Das System ist überdämpft (Blasen, Gerinnsel, abgeknickter Katheter), daher lassen sich weder fn noch ζ aus den Spitzen ableiten.`,`Ninguna oscilación medible tras la liberación: el sistema está sobreamortiguado (burbujas, coágulos, catéter acodado), así que ni fn ni ζ pueden obtenerse de los picos.`],
+[`reale {0}/{1} ({2})`,`true {0}/{1} ({2})`,`réelle {0}/{1} ({2})`,`wahr {0}/{1} ({2})`,`real {0}/{1} ({2})`]
+];
+const LANGS=['it','en','fr','de','es'],LOCALE={it:'it-IT',en:'en-GB',fr:'fr-FR',de:'de-DE',es:'es-ES'};
+const DICT={en:new Map(),fr:new Map(),de:new Map(),es:new Map()},MISS=new Set();
+ROWS.forEach(r=>{DICT.en.set(r[0],r[1]);DICT.fr.set(r[0],r[2]);DICT.de.set(r[0],r[3]);DICT.es.set(r[0],r[4]);});
+let LANG='it';
+function tr(s){
+  let o=s;
+  if(LANG!=='it'){const m=DICT[LANG];if(m.has(s))o=m.get(s);else MISS.add(s);}
+  if(arguments.length>1){const a=arguments;o=o.replace(/\{(\d)\}/g,(_,i)=>a[+i+1]);}
+  return o;
+}
+function applyStatic(){
+  document.querySelectorAll('[data-i]').forEach(el=>{
+    if(el._it===undefined)el._it=el.innerHTML;
+    let v=el._it;
+    if(LANG!=='it'){const m=DICT[LANG],k='@'+el.dataset.i;if(m.has(k))v=m.get(k);else MISS.add(k);}
+    if(el.innerHTML!==v)el.innerHTML=v;
+  });
+  document.documentElement.lang=LANG;
+  document.title=tr('Trasduttore di pressione extravascolare – analogo RLC');
+}
+const fmt=(x,d)=>Number(x).toLocaleString(LOCALE[LANG],{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmt3=x=>Number(x).toLocaleString(LOCALE[LANG],{minimumSignificantDigits:3,maximumSignificantDigits:3});
+
+// ================= TEMA =================
+const isLight=()=>document.body.classList.contains('light-theme');
+/* colori dei grafici (Bode, Gardner, registrazione del flush); monitor e scena restano scuri come un apparecchio */
+function PAL(){
+  return isLight()
+    ?{grid:'#e2e8f0',txt:'#64748b',title:'#334155',ink:'#0f172a',read:'#e11d48',real:'rgba(2,132,199,0.75)',peak:'#ca8a04',open:'#0369a1',openFill:'rgba(2,132,199,0.08)',frame:'#cbd5e1',dot:'#0f172a',dotS:'#ffffff',ref:'#64748b',harm:'rgba(15,118,110,0.3)',band:'rgba(15,118,110,0.08)'}
+    :{grid:'#1c2a42',txt:'#6b7a93',title:'#cbd5e1',ink:'#e6eaf2',read:'#fb7185',real:'rgba(125,211,252,0.7)',peak:'#fde047',open:'#7dd3fc',openFill:'rgba(56,189,248,0.08)',frame:'#22314b',dot:'#ffffff',dotS:'#0a101c',ref:'#94a3b8',harm:'rgba(45,212,191,0.3)',band:'rgba(45,212,191,0.08)'};
+}
+
+// ================= PARAMETRI =================
+const RANGES={R:{min:0.2,max:60},L:{min:0.004,max:1.0},C:{min:0.1,max:50}};
+const fromSlider=k=>{const r=RANGES[k];return r.min*Math.pow(r.max/r.min,+$(k).value/1000);};
+const toSlider=(k,v)=>{const r=RANGES[k];$(k).value=Math.round(1000*Math.log(v/r.min)/Math.log(r.max/r.min));};
+const PRESETS={
+  std:{R:5,L:0.1,C:1.0},      // fn≈16 Hz ζ≈0.25
+  opt:{R:13,L:0.1,C:1.0},     // fn≈16 Hz ζ≈0.65
+  long:{R:5,L:0.3,C:1.0},     // fn≈9 Hz  ζ≈0.14
+  bubble:{R:5,L:0.1,C:12},    // fn≈4.6 Hz ζ≈0.87
+  clot:{R:40,L:0.1,C:1.0},    // fn≈16 Hz ζ≈2
+  // catetere di arteria polmonare: 110 cm, lume 7–7,5 F → L e R più alti di una cannula radiale
+  pa_std:{R:10,L:0.25,C:1.0},     // fn≈10 Hz ζ≈0.32
+  pa_opt:{R:26,L:0.25,C:1.0},     // fn≈10 Hz ζ≈0.82
+  pa_long:{R:10,L:0.5,C:1.0},     // fn≈7.1 Hz ζ≈0.22 (prolunghe e rubinetti aggiunti)
+  pa_bubble:{R:10,L:0.25,C:12},   // fn≈2.9 Hz ζ≈1.1
+  pa_clot:{R:60,L:0.25,C:1.0}     // fn≈10 Hz ζ≈1.9
+};
+/* due sezioni sullo stesso modello: cambiano preset, intervalli di pressione ed etichette, non le equazioni */
+const MODES={
+  pa:{ps:[15,80],pd:[2,40],def:{ps:25,pd:10},preset:'pa_std'},
+  art:{ps:[80,220],pd:[30,120],def:{ps:120,pd:80},preset:'std'}
+};
+const PA_ALIAS={std:'pa_std',opt:'pa_opt',long:'pa_long',bubble:'pa_bubble',clot:'pa_clot'}; // preset generici richiesti dallo Swan-Ganz
+let MODE='art';
+let URLP=null; // pressioni dello scenario Swan-Ganz ricevute via URL {ps,pd}
+function applyPreset(key){
+  const v=PRESETS[key];if(!v)return;
+  toSlider('R',v.R);toSlider('L',v.L);toSlider('C',v.C);
+  onParams();
+}
+document.querySelectorAll('.presets button').forEach(b=>b.onclick=()=>applyPreset(b.dataset.p));
+function setMode(m,presetKey){
+  MODE=MODES[m]?m:'art';const M=MODES[MODE];
+  document.querySelectorAll('.modetabs button').forEach(b=>{const on=b.dataset.mode===MODE;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  document.querySelectorAll('.presets').forEach(g=>g.hidden=g.dataset.mode!==MODE);
+  $('Ps').min=M.ps[0];$('Ps').max=M.ps[1];$('Pd').min=M.pd[0];$('Pd').max=M.pd[1];
+  const d=MODE==='pa'&&URLP?URLP:M.def;$('Ps').value=d.ps;$('Pd').value=d.pd;
+  const v=PRESETS[presetKey]||PRESETS[M.preset];toSlider('R',v.R);toSlider('L',v.L);toSlider('C',v.C);
+  // nuova sezione: si riparte da una lettura stabile e senza flush in memoria
+  if(!flush||flush.done){flush=null;estimate=null;$('eFn').textContent='—';$('eZ').textContent='—';$('eFnT').textContent='';$('eZT').textContent='';$('eMsg').textContent='';}
+  onParams();S.y=P.Pd;S.q=0;buf.length=0;monTop=MODE==='pa'?60:200;
+  renderMode();drawCapture();
+}
+document.querySelectorAll('.modetabs button').forEach(b=>b.onclick=()=>{if(b.dataset.mode!==MODE)setMode(b.dataset.mode);});
+
+const P={R:5,L:0.1,C:1,HR:75,Ps:120,Pd:80,fn:0,z:0};
+let estimate=null; // {fn,z}
+const isPA=()=>MODE==='pa'; // sezione Swan-Ganz: etichette PAP invece di ART
+
+// ================= ONDA ARTERIOSA =================
+function makeArterial(T){
+  const N=1200,k=Math.sqrt(T/0.8),tp=0.09*k,arr=new Float64Array(N+1);
+  const raw=t=>{
+    const rise=t<tp?(1-Math.cos(Math.PI*t/tp))/2:1;
+    const sys=t<tp?rise:Math.exp(-Math.pow((t-tp)/(0.15*k),2));
+    const run=t<tp?rise:Math.exp(-(t-tp)/(0.9*k));
+    const bump=0.16*Math.exp(-Math.pow((t-0.34*k)/(0.035*k),2));
+    return 0.55*sys+0.42*run+bump;
+  };
+  const end=raw(T);let mn=1e9,mx=-1e9;
+  for(let i=0;i<=N;i++){const t=T*i/N;arr[i]=raw(t)-end*t/T;mn=Math.min(mn,arr[i]);mx=Math.max(mx,arr[i]);}
+  for(let i=0;i<=N;i++)arr[i]=(arr[i]-mn)/(mx-mn);
+  return ph=>{let x=(ph-Math.floor(ph))*N;const i=Math.floor(x),f=x-i;return arr[i]*(1-f)+arr[Math.min(i+1,N)]*f;};
+}
+let shape=makeArterial(0.8);
+
+// ================= STATO DELLA SIMULAZIONE =================
+// L dq/dt = u - R q - y ;  C dy/dt = q   (y = pressione sul diaframma, q = flusso)
+const S={t:0,y:100,q:0,phase:0,ua:100};
+const FLUSH_P=300, FLUSH_DUR=0.5, CAP_AFTER=1.2;
+let flush=null; // {t0, rel, data:[], done, res}
+let speed=1;
+const BUF_DT=0.002, BUF_SPAN=5;
+const buf=[]; let bufAcc=0;
+
+function inputAt(tAbs,phase){
+  if(flush && tAbs>=flush.t0 && tAbs<flush.rel) return FLUSH_P;
+  return P.Pd+(P.Ps-P.Pd)*shape(phase);
+}
+function rk4step(st,h,inp){
+  const R=P.R,L=P.L,C=P.C*1e-3;
+  const f=(dt,y,q)=>[q/C,(inp(dt)-R*q-y)/L];
+  const {y,q}=st;
+  const k1=f(0,y,q),k2=f(h/2,y+h/2*k1[0],q+h/2*k1[1]),k3=f(h/2,y+h/2*k2[0],q+h/2*k2[1]),k4=f(h,y+h*k3[0],q+h*k3[1]);
+  st.y+=h/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]);
+  st.q+=h/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]);
+}
+function rk4(h){
+  const f0=P.HR/60;
+  // "ombra": stesso sistema senza flush, serve a isolare la risposta al solo gradino (linearità)
+  if(flush&&!flush.done) rk4step(flush.sh,h,dt=>P.Pd+(P.Ps-P.Pd)*shape(S.phase+dt*f0));
+  rk4step(S,h,dt=>inputAt(S.t+dt,S.phase+dt*f0));
+  S.t+=h; S.phase=(S.phase+h*f0)%1;
+  S.ua=inputAt(S.t,S.phase);
+  if(!isFinite(S.y)){S.y=S.ua;S.q=0;}
+}
+function maxStep(){const C=P.C*1e-3,wn=1/Math.sqrt(P.L*C);return Math.min(2e-4,0.15/Math.max(wn,P.R/P.L,1/(P.R*C)));}
+
+function advance(simDt){
+  if(simDt<=0)return;
+  const hm=maxStep(),n=Math.ceil(simDt/hm),h=simDt/n;
+  for(let i=0;i<n;i++){
+    rk4(h);
+    bufAcc+=h;
+    if(bufAcc>=BUF_DT){bufAcc-=BUF_DT;buf.push([S.t,S.ua,S.y,flush&&!flush.done&&S.t<flush.rel+0.3?1:0]);}
+    if(flush&&!flush.done){
+      if(S.t>=flush.t0-0.15) flush.data.push([S.t,S.ua,S.y,flush.sh.y]);
+      if(S.t>=flush.rel+CAP_AFTER){flush.done=true;analyzeFlush();}
+    }
+  }
+  const cut=S.t-BUF_SPAN-0.1; let k=0; while(k<buf.length&&buf[k][0]<cut)k++; if(k>200)buf.splice(0,k);
+}
+
+// ================= FAST FLUSH =================
+$('btnFlush').onclick=()=>{
+  if(flush&&!flush.done)return;
+  flush={t0:S.t+0.15,rel:S.t+0.15+FLUSH_DUR,data:[],done:false,sh:{y:S.y,q:S.q}};
+  $('btnFlush').disabled=true; $('btnFlush').textContent=tr('Flush in corso…');
+  $('eMsg').textContent='';
+};
+function analyzeFlush(){
+  $('btnFlush').disabled=false; $('btnFlush').textContent=tr('⚡ Fast flush');
+  const d=flush.data.filter(s=>s[0]>=flush.rel);
+  const stepAmp=Math.abs(d[0][2]-d[0][3])||1;
+  // risposta libera al rilascio: lettura meno lettura "senza flush"
+  const e=d.map(s=>[s[0],s[2]-s[3]]);
+  const ext=[{t:e[0][0],v:e[0][1]}]; // al rilascio la deviazione è massima e la velocità ~0
+  let sign=Math.sign(e[0][1]),cur=null;
+  for(const [t,v] of e){
+    const sg=Math.sign(v);
+    if(sg!==0&&sg!==sign){ if(cur)ext.push(cur); sign=sg; cur={t,v}; }
+    else if(cur&&Math.abs(v)>Math.abs(cur.v)) cur={t,v};
+  }
+  if(cur){const last=e[e.length-1][1]; if(Math.abs(last)<Math.abs(cur.v)*0.7)ext.push(cur);}
+  const peaks=ext.filter(p=>Math.abs(p.v)>5e-4*stepAmp);
+  const visible=ext.slice(1).filter(p=>Math.abs(p.v)>0.02*stepAmp).length;
+  flush.peaks=[];
+  flush.res={fnT:P.fn,zT:P.z};
+  if(peaks.length>=2){
+    const p1=peaks.length>=3?peaks[1]:peaks[0],p2=peaks.length>=3?peaks[2]:peaks[1];
+    const r=Math.abs(p2.v/p1.v),lr=Math.log(r);
+    const z=-lr/Math.sqrt(Math.PI*Math.PI+lr*lr);
+    const Td=peaks.length>=4?(peaks[3].t-peaks[1].t):2*(p2.t-p1.t);
+    const fd=1/Td, fn=fd/Math.sqrt(Math.max(1e-6,1-z*z));
+    estimate={fn,z}; flush.peaks=peaks.slice(1,Math.min(peaks.length,7)).filter(p=>Math.abs(p.v)>0.02*stepAmp);
+    Object.assign(flush.res,{fn,z,r,n:visible});
+  } else {
+    estimate=null;
+  }
+  renderFlush();
+  drawCapture(); drawGardner();
+}
+/* testi dell'esito del flush, separati dal calcolo per poterli ritradurre al cambio di lingua */
+function renderFlush(){
+  if(!flush||!flush.done||!flush.res)return;
+  const R=flush.res;
+  $('eFnT').textContent=tr('teorica {0}',fmt(R.fnT,1)+' Hz'); $('eZT').textContent=tr('teorico {0}',fmt(R.zT,2));
+  if(R.fn!==undefined){
+    $('eFn').textContent=fmt(R.fn,1)+' Hz'; $('eZ').textContent=fmt(R.z,2);
+    const giud=R.z<0.45?tr('sistema sottosmorzato: troppe oscillazioni, la sistolica viene sovrastimata.'):
+               R.z<=0.8?tr('smorzamento adeguato: 1–2 oscillazioni e poi l\'onda torna pulita.'):tr('smorzamento vicino al critico.');
+    $('eMsg').innerHTML=tr(R.n===1?'{0} oscillazione visibile dopo il rilascio (rapporto tra picchi r = {1}): {2}':'{0} oscillazioni visibili dopo il rilascio (rapporto tra picchi r = {1}): {2}',R.n,fmt(R.r,2),giud);
+  } else {
+    $('eFn').textContent=tr('n.d.'); $('eZ').textContent='≥ 1';
+    $('eMsg').textContent=tr('Nessuna oscillazione misurabile dopo il rilascio: il sistema è sovrasmorzato (bolle, coaguli, catetere piegato), quindi né fn né ζ si possono ricavare dai picchi.');
+  }
+}
+
+// ================= SCENA =================
+const sc=$('scene'); const SW=1100,SH=384; // margine in basso per le scritte ingrandite su smartphone
+const cath={p0:[512,104],p1:[560,300],p2:[700,130],p3:[840,232]}; // catetere (Bézier)
+function bez(c,t){const m=1-t;const f=(a,b,cc,d)=>m*m*m*a+3*m*m*t*b+3*m*t*t*cc+t*t*t*d;
+  return [f(c.p0[0],c.p1[0],c.p2[0],c.p3[0]),f(c.p0[1],c.p1[1],c.p2[1],c.p3[1])];}
+const cathPts=[];for(let i=0;i<=200;i++)cathPts.push(bez(cath,i/200));
+let cathLen=0;const cathCum=[0];for(let i=1;i<cathPts.length;i++){cathLen+=Math.hypot(cathPts[i][0]-cathPts[i-1][0],cathPts[i][1]-cathPts[i-1][1]);cathCum.push(cathLen);}
+function cathAt(s){s=((s%cathLen)+cathLen)%cathLen;let i=1;while(i<cathCum.length-1&&cathCum[i]<s)i++;const f=(s-cathCum[i-1])/(cathCum[i]-cathCum[i-1]||1);
+  return [cathPts[i-1][0]+(cathPts[i][0]-cathPts[i-1][0])*f,cathPts[i-1][1]+(cathPts[i][1]-cathPts[i-1][1])*f];}
+const artery={p0:[170,118],p1:[190,30],p2:[300,72],p3:[380,80]};
+let bloodOff=0;
+
+function heartPath(g,cx,cy,s){
+  g.beginPath();
+  g.moveTo(cx,cy-0.22*s);
+  g.bezierCurveTo(cx-0.06*s,cy-0.52*s,cx-0.52*s,cy-0.52*s,cx-0.5*s,cy-0.17*s);
+  g.bezierCurveTo(cx-0.48*s,cy+0.12*s,cx-0.18*s,cy+0.3*s,cx,cy+0.5*s);
+  g.bezierCurveTo(cx+0.18*s,cy+0.3*s,cx+0.48*s,cy+0.12*s,cx+0.5*s,cy-0.17*s);
+  g.bezierCurveTo(cx+0.52*s,cy-0.52*s,cx+0.06*s,cy-0.52*s,cx,cy-0.22*s);
+  g.closePath();
+}
+function label(g,txt,x,y,col,al){g.fillStyle=col||'#8b96aa';g.textAlign=al||'center';g.fillText(txt,x,y);}
+
+let SCF=1;const SF=s=>s.replace(/(\d+)px/,(m,n)=>Math.round(n*SCF)+'px');
+function drawScene(realDt){
+  const dpr=window.devicePixelRatio||1,w=Math.floor(sc.clientWidth),h=w*SH/SW;
+  if(sc.width!==Math.round(w*dpr)){sc.width=Math.round(w*dpr);sc.height=Math.round(h*dpr);sc.style.height=h+'px';}
+  const g=sc.getContext('2d');const k=w/SW;g.setTransform(dpr*k,0,0,dpr*k,0,0);
+  SCF=k<0.75?Math.min(1.45,0.75/k):1; // su schermi stretti le scritte della scena si ingrandiscono
+  g.clearRect(0,0,SW,SH);
+  // sfondo
+  const bg=g.createLinearGradient(0,0,0,SH);bg.addColorStop(0,'#0f1a2e');bg.addColorStop(1,'#0a111e');
+  g.fillStyle=bg;g.fillRect(0,0,SW,SH);
+  g.strokeStyle='rgba(255,255,255,0.03)';g.lineWidth=1;
+  for(let x=0;x<SW;x+=30){g.beginPath();g.moveTo(x,0);g.lineTo(x,SH);g.stroke();}
+  for(let y=0;y<SH;y+=30){g.beginPath();g.moveTo(0,y);g.lineTo(SW,y);g.stroke();}
+  g.font=SF('600 13px system-ui');
+
+  const flushing=flush&&!flush.done&&S.t>=flush.t0&&S.t<flush.rel;
+  const pn=clamp((S.ua-P.Pd)/(P.Ps-P.Pd+1e-9),0,1.3);
+  // ---- cuore ----
+  const T=60/P.HR,sysFrac=Math.min(0.5,0.3*Math.sqrt(T/0.8)/T);
+  const contr=S.phase<sysFrac?Math.sin(Math.PI*S.phase/sysFrac):0;
+  const hs=150*(1-0.1*contr);
+  const glow=g.createRadialGradient(130,190,10,130,190,130);
+  glow.addColorStop(0,`rgba(244,63,94,${0.18+0.25*contr})`);glow.addColorStop(1,'rgba(244,63,94,0)');
+  g.fillStyle=glow;g.fillRect(0,40,300,300);
+  // aorta + arteria (spessore pulsa con la pressione)
+  const aw=16+7*pn;
+  g.lineCap='round';
+  g.strokeStyle='#7f1d1d';g.lineWidth=aw+6;
+  g.beginPath();g.moveTo(...artery.p0);g.bezierCurveTo(...artery.p1,...artery.p2,...artery.p3);g.lineTo(560,80);g.stroke();
+  g.strokeStyle='#dc2626';g.lineWidth=aw;g.stroke();
+  // globuli
+  bloodOff+=realDt*speed*(40+160*pn);
+  g.fillStyle='rgba(254,202,202,0.75)';
+  for(let i=0;i<14;i++){const x=200+((i*30+bloodOff)%370);const yy=x<380?null:80;
+    if(yy!==null){g.beginPath();g.ellipse(x,80+Math.sin(i*1.7)*aw*0.25,4,2.5,0,0,7);g.fill();}}
+  const hg=g.createRadialGradient(110,165,10,130,190,hs*0.6);
+  hg.addColorStop(0,'#fb7185');hg.addColorStop(1,'#9f1239');
+  heartPath(g,130,195,hs);g.fillStyle=hg;g.fill();g.strokeStyle='#4c0519';g.lineWidth=2;g.stroke();
+  g.strokeStyle='rgba(255,255,255,0.25)';g.lineWidth=2;g.beginPath();g.moveTo(130,195-0.2*hs);g.quadraticCurveTo(118,210,132,195+0.42*hs);g.stroke();
+  label(g,tr('Cuore'),130,330);label(g,tr(isPA()?'arteria polmonare':'arteria radiale'),460,58);
+  g.font=SF('12px system-ui');label(g,`${isPA()?'PAP':'P art'} = ${S.ua.toFixed(0)} mmHg`,460,128,'#fca5a5');g.font=SF('600 13px system-ui');
+
+  // ---- cannula ----
+  g.strokeStyle='#cbd5e1';g.lineWidth=7;g.beginPath();g.moveTo(500,82);g.lineTo(cath.p0[0],cath.p0[1]);g.stroke();
+
+  // ---- catetere ----
+  g.lineCap='round';
+  g.strokeStyle='rgba(203,213,225,0.55)';g.lineWidth=16;
+  g.beginPath();g.moveTo(...cath.p0);g.bezierCurveTo(...cath.p1,...cath.p2,...cath.p3);g.stroke();
+  g.strokeStyle='rgba(56,189,248,0.45)';g.lineWidth=10;g.stroke();
+  // particelle della colonna liquida: lo spostamento è proporzionale al volume entrato nel trasduttore (C·P)
+  const disp=clamp((S.y-(P.Ps+P.Pd)/2)*0.45*Math.sqrt(P.C),-70,70);
+  g.fillStyle='#e0f2fe';
+  for(let i=0;i<34;i++){const s=i*cathLen/34+disp;if(s<4||s>cathLen-4)continue;const [x,y]=cathAt(s);g.beginPath();g.arc(x,y,2.2,0,7);g.fill();}
+  // frecce velocità (flusso Q)
+  const qv=S.q*1e3; // µL/s
+  const [ax,ay]=cathAt(cathLen*0.62),[bx,by]=cathAt(cathLen*0.62+1);
+  const ang=Math.atan2(by-ay,bx-ax),len=clamp(qv*0.08,-45,45);
+  if(Math.abs(len)>2){g.save();g.translate(ax,ay-26);g.rotate(ang);g.strokeStyle='#2dd4bf';g.fillStyle='#2dd4bf';g.lineWidth=2.5;
+    g.beginPath();g.moveTo(-len/2,0);g.lineTo(len/2,0);g.stroke();g.beginPath();const sgn=Math.sign(len);g.moveTo(len/2+sgn*6,0);g.lineTo(len/2-sgn*2,-5);g.lineTo(len/2-sgn*2,5);g.fill();g.restore();}
+  g.font=SF('12px system-ui');
+  label(g,tr(isPA()?'catetere di Swan-Ganz (110 cm) con soluzione fisiologica':'cannula e prolunga con soluzione fisiologica'),612,320);
+  label(g,tr('Rc attrito · Lc inerzia'),612,336,'#7dd3fc');
+  label(g,`Q = ${fmt(qv,1)} µL/s`,ax,ay-40,'#2dd4bf');
+  g.font=SF('600 13px system-ui');
+
+  // ---- sacca di lavaggio + valvola flush ----
+  const [vx,vy]=cathAt(cathLen*0.88);
+  g.strokeStyle='#64748b';g.lineWidth=3;g.beginPath();g.moveTo(vx,vy-12);g.lineTo(vx,70);g.lineTo(760,70);g.stroke();
+  g.fillStyle='#1e293b';g.strokeStyle='#94a3b8';g.lineWidth=2;
+  g.beginPath();g.roundRect(690,14,140,46,8);g.fill();g.stroke();
+  g.fillStyle='rgba(125,211,252,0.35)';g.beginPath();g.roundRect(696,20,128,34,6);g.fill();
+  g.font=SF('11px system-ui');label(g,tr('NaCl 0,9 % · 300 mmHg'),760,41,'#e2e8f0');
+  g.fillStyle=flushing?'#38bdf8':'#334155';g.strokeStyle='#cbd5e1';
+  g.beginPath();g.roundRect(vx-12,vy-18,24,16,4);g.fill();g.stroke();
+  if(flushing){g.strokeStyle='rgba(56,189,248,0.8)';g.lineWidth=4;g.beginPath();g.moveTo(vx,70);g.lineTo(vx,vy-18);g.stroke();
+    g.font=SF('700 13px system-ui');label(g,'FLUSH 300 mmHg',vx+70,vy-30,'#38bdf8');}
+  g.font=SF('11px system-ui');label(g,tr('valvola flush'),vx-50,vy-22,'#94a3b8');
+
+  // ---- trasduttore in sezione ----
+  const X0=850,Y0=170,W=220,H=150;
+  g.fillStyle='#1f2937';g.strokeStyle='#9ca3af';g.lineWidth=2;
+  g.beginPath();g.roundRect(X0,Y0,W,H,14);g.fill();g.stroke();
+  // ingresso
+  g.fillStyle='rgba(56,189,248,0.55)';g.fillRect(cath.p3[0]-2,226,X0+30-cath.p3[0]+2,12);
+  // camera con liquido
+  const cx0=X0+30,cx1=X0+W-30,cy0=Y0+28,dy=Y0+80;
+  const sag=clamp(S.y*P.C*0.11,-6,42);
+  g.beginPath();g.moveTo(cx0,dy);g.lineTo(cx0,cy0+10);g.quadraticCurveTo(cx0,cy0,cx0+10,cy0);g.lineTo(cx1-10,cy0);g.quadraticCurveTo(cx1,cy0,cx1,cy0+10);g.lineTo(cx1,dy);
+  g.quadraticCurveTo((cx0+cx1)/2,dy+2*sag,cx0,dy);g.closePath();
+  const fl=g.createLinearGradient(0,cy0,0,dy+sag);fl.addColorStop(0,'rgba(56,189,248,0.75)');fl.addColorStop(1,'rgba(14,116,144,0.85)');
+  g.fillStyle=fl;g.fill();
+  // cavità di riferimento sotto il diaframma
+  g.fillStyle='#0b1220';g.beginPath();g.moveTo(cx0,dy);g.quadraticCurveTo((cx0+cx1)/2,dy+2*sag,cx1,dy);g.lineTo(cx1,Y0+H-18);g.lineTo(cx0,Y0+H-18);g.closePath();g.fill();
+  // diaframma
+  const strain=clamp(S.y/200,0,1.6);
+  g.strokeStyle='#e5e7eb';g.lineWidth=4;g.beginPath();g.moveTo(cx0,dy);g.quadraticCurveTo((cx0+cx1)/2,dy+2*sag,cx1,dy);g.stroke();
+  // estensimetri (colore = deformazione)
+  const col=`hsl(${50-40*Math.min(1,strain)},95%,${55+10*Math.min(1,strain)}%)`;
+  g.strokeStyle=col;g.lineWidth=1.6;
+  for(const c of [0.3,0.7]){const x=cx0+(cx1-cx0)*c;
+    const yb=dy+sag*4*c*(1-c)+4;g.beginPath();g.moveTo(x-14,yb);for(let i=0;i<7;i++)g.lineTo(x-12+i*4,yb+(i%2?6:0));g.lineTo(x+14,yb);g.stroke();}
+  // cavo
+  g.strokeStyle='#9ca3af';g.lineWidth=4;g.beginPath();g.moveTo(X0+W,Y0+H-40);g.bezierCurveTo(X0+W+20,Y0+H-40,X0+W+10,Y0+H+20,X0+W+25,SH-5);g.stroke();
+  g.font=SF('600 13px system-ui');label(g,tr('Trasduttore (sezione)'),X0+W/2,Y0-12,'#e5e7eb');
+  g.font=SF('11px system-ui');
+  label(g,tr('camera con liquido'),X0+W/2,cy0+18,'#e0f2fe');
+  label(g,tr('diaframma Cd + estensimetri'),X0+W/2,Y0+H-4,'#cbd5e1');
+  g.font=SF('700 15px system-ui');label(g,tr('P letta = {0} mmHg',S.y.toFixed(0)),X0+W/2,Y0+H+24,'#fb7185');
+  g.font=SF('11px system-ui');label(g,tr('deflessione ∝ Cd·P = {0} µL',(S.y*P.C).toFixed(0)),X0+W/2,Y0+H+40,'#94a3b8'); // C in µL/mmHg × P in mmHg = µL
+}
+
+// ================= MONITOR =================
+function setup(cv,hFix){
+  if(!cv.dataset.h)cv.dataset.h=cv.getAttribute('height'); // altezza CSS fissa, letta una volta sola
+  const dpr=window.devicePixelRatio||1,w=Math.floor(cv.clientWidth),h=hFix||+cv.dataset.h;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+'px';}
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);g.font='11px system-ui';return {g,w,h};
+}
+let monTop=200;
+function drawMonitor(){
+  const {g,w,h}=setup($('mon'));const L=34,R=6,T=8,B=8;
+  const anyFlush=buf.some(b=>b[3]);
+  // scala adattata anche alle pressioni polmonari (fondo scala 40–80 mmHg)
+  const target=anyFlush?320:isPA()?Math.max(40,Math.ceil((P.Ps+15)/20)*20):Math.max(160,Math.ceil((P.Ps+40)/20)*20);
+  monTop+= (target-monTop)*0.15;
+  const Y=v=>h-B-(h-B-T)*clamp(v,-10,monTop+5)/monTop;
+  const t1=S.t,t0=t1-BUF_SPAN,X=t=>L+(w-L-R)*(t-t0)/BUF_SPAN;
+  g.strokeStyle='rgba(45,212,191,0.10)';g.fillStyle='#4b5d78';g.textAlign='right';
+  const st=monTop>250?50:monTop>100?20:10;
+  for(let v=0;v<=monTop;v+=st){g.beginPath();g.moveTo(L,Y(v));g.lineTo(w-R,Y(v));g.stroke();g.fillText(v,L-5,Y(v)+4);}
+  for(let s=Math.ceil(t0);s<=t1;s++){g.beginPath();g.moveTo(X(s),T);g.lineTo(X(s),h-B);g.stroke();}
+  if(buf.length<2)return;
+  g.lineWidth=1.4;g.strokeStyle='rgba(125,211,252,0.65)';g.setLineDash([4,3]);g.beginPath();
+  let first=true;for(const b of buf){if(b[0]<t0)continue;first?g.moveTo(X(b[0]),Y(b[1])):g.lineTo(X(b[0]),Y(b[1]));first=false;}g.stroke();g.setLineDash([]);
+  g.lineWidth=2.2;g.strokeStyle='#fb7185';g.shadowColor='rgba(251,113,133,0.6)';g.shadowBlur=6;g.beginPath();
+  first=true;for(const b of buf){if(b[0]<t0)continue;first?g.moveTo(X(b[0]),Y(b[2])):g.lineTo(X(b[0]),Y(b[2]));first=false;}g.stroke();g.shadowBlur=0;
+  g.fillStyle='#fb7185';g.beginPath();g.arc(X(t1),Y(S.y),3.5,0,7);g.fill();
+}
+let numAcc=0;
+function updateNumerics(){
+  const span=Math.max(2*60/P.HR,1.5);const sel=buf.filter(b=>b[0]>S.t-span&&!b[3]);
+  if(sel.length<20)return;
+  if(flush&&!flush.done){ $('nSD').textContent='FLUSH'; $('nM').textContent=''; return; }
+  let a=[-1e9,1e9,0],b=[-1e9,1e9,0];
+  for(const s of sel){a[0]=Math.max(a[0],s[2]);a[1]=Math.min(a[1],s[2]);a[2]+=s[2];b[0]=Math.max(b[0],s[1]);b[1]=Math.min(b[1],s[1]);b[2]+=s[1];}
+  a[2]/=sel.length;b[2]/=sel.length;
+  $('nSD').textContent=`${a[0].toFixed(0)}/${a[1].toFixed(0)}`;$('nM').textContent=`(${a[2].toFixed(0)})`;
+  $('nReal').textContent=tr('reale {0}/{1} ({2})',b[0].toFixed(0),b[1].toFixed(0),b[2].toFixed(0));
+  const es=Math.round(a[0]-b[0]);$('nErr').textContent=tr('errore sist. {0} mmHg',(es>0?'+':es<0?'−':'±')+Math.abs(es));
+}
+
+// ================= REGISTRAZIONE FLUSH =================
+function drawCapture(){
+  const {g,w,h}=setup($('cap'));const L=36,R=8,T=10,B=22,C=PAL();
+  if(!flush||!flush.data.length){g.fillStyle=C.txt;g.textAlign='center';g.fillText(tr('Premi “Fast flush” per registrare la risposta'),w/2,h/2);return;}
+  const d=flush.data,t0=d[0][0],t1=d[d.length-1][0];
+  const X=t=>L+(w-L-R)*(t-t0)/(Math.max(t1-t0,1e-3)),top=330,Y=v=>h-B-(h-B-T)*clamp(v,-20,top)/top;
+  g.strokeStyle=C.grid;g.fillStyle=C.txt;g.textAlign='right';
+  for(let v=0;v<=top;v+=50){g.beginPath();g.moveTo(L,Y(v));g.lineTo(w-R,Y(v));g.stroke();g.fillText(v,L-5,Y(v)+4);}
+  g.textAlign='center';for(let s=0;s<=t1-t0;s+=0.25)g.fillText(fmt(s,2)+' s',X(t0+s),h-6);
+  g.fillStyle=C.openFill;g.fillRect(X(flush.t0),T,X(flush.rel)-X(flush.t0),h-B-T);
+  const step=Math.max(1,Math.floor(d.length/1500));
+  g.strokeStyle=C.real;g.lineWidth=1.3;g.setLineDash([4,3]);g.beginPath();
+  for(let i=0;i<d.length;i+=step){i?g.lineTo(X(d[i][0]),Y(d[i][1])):g.moveTo(X(d[i][0]),Y(d[i][1]));}g.stroke();g.setLineDash([]);
+  g.strokeStyle=C.read;g.lineWidth=2;g.beginPath();
+  for(let i=0;i<d.length;i+=step){i?g.lineTo(X(d[i][0]),Y(d[i][2])):g.moveTo(X(d[i][0]),Y(d[i][2]));}g.stroke();
+  if(flush.peaks){g.fillStyle=C.peak;for(const p of flush.peaks){const j=d.findIndex(s=>s[0]>=p.t);if(j>=0){g.beginPath();g.arc(X(d[j][0]),Y(d[j][2]),4,0,7);g.fill();}}}
+  g.fillStyle=C.open;g.textAlign='left';g.fillText(tr('valvola aperta'),X(flush.t0)+4,T+12);
+}
+
+// ================= BODE e GARDNER =================
+const Hmag=(f,fn,z)=>{const r=f/fn;return 1/Math.sqrt(Math.pow(1-r*r,2)+Math.pow(2*z*r,2));};
+const Hph=(f,fn,z)=>{const r=f/fn;return -Math.atan2(2*z*r,1-r*r)*180/Math.PI;};
+function niceStep(x){const e=Math.pow(10,Math.floor(Math.log10(x))),m=x/e;return(m<1.5?1:m<3?2:m<7?5:10)*e;}
+const FMIN=0.5,FMAX=200;
+function drawBode(){
+  const {fn,z}=P,f0=P.HR/60,pk=z<0.707?1/(2*z*Math.sqrt(1-z*z)):1,amax=Math.max(1.6,Math.min(pk*1.12,8)),C=PAL();
+  [['cvA','amp'],['cvP','ph']].forEach(([id,kind])=>{
+    const {g,w,h}=setup($(id));const L=42,R=10,T=8,B=20;
+    const X=f=>L+(w-L-R)*Math.log(f/FMIN)/Math.log(FMAX/FMIN);
+    const lo=kind==='amp'?0:-180,hi=kind==='amp'?amax:0,Y=v=>h-B-(h-B-T)*(v-lo)/(hi-lo);
+    g.fillStyle=C.band;g.fillRect(X(f0),T,X(Math.min(10*f0,FMAX))-X(f0),h-B-T);
+    g.strokeStyle=C.harm;for(let k=1;k<=10;k++){g.beginPath();g.moveTo(X(k*f0),T);g.lineTo(X(k*f0),h-B);g.stroke();}
+    g.strokeStyle=C.grid;g.fillStyle=C.txt;g.textAlign='center';
+    [0.5,1,2,5,10,20,50,100,200].forEach(f=>{g.beginPath();g.moveTo(X(f),T);g.lineTo(X(f),h-B);g.stroke();if(kind==='ph'||id==='cvA')g.fillText((f<1?fmt(f,1):f)+' Hz',X(f),h-5);});
+    g.textAlign='right';
+    const ticks=kind==='amp'?(()=>{const s=niceStep(amax/4),a=[];for(let v=0;v<=amax+1e-9;v+=s)a.push(v);return a;})():[-180,-90,0];
+    ticks.forEach(v=>{g.beginPath();g.moveTo(L,Y(v));g.lineTo(w-R,Y(v));g.stroke();g.fillText(kind==='amp'?fmt(v,1):v+'°',L-5,Y(v)+4);});
+    if(kind==='amp'){g.strokeStyle=C.ref;g.setLineDash([3,3]);g.beginPath();g.moveTo(L,Y(1));g.lineTo(w-R,Y(1));g.stroke();g.setLineDash([]);}
+    g.save();g.beginPath();g.rect(L,T,w-L-R,h-B-T);g.clip();
+    g.strokeStyle=C.read;g.lineWidth=2.2;g.beginPath();
+    for(let i=0;i<=400;i++){const f=FMIN*Math.pow(FMAX/FMIN,i/400),v=kind==='amp'?Hmag(f,fn,z):Hph(f,fn,z);i?g.lineTo(X(f),Y(v)):g.moveTo(X(f),Y(v));}
+    g.stroke();g.restore();
+    g.fillStyle=C.title;g.textAlign='left';g.fillText(kind==='amp'?tr('|P letta / P reale|'):tr('fase'),L+6,T+13);
+  });
+}
+function drawGardner(){
+  const {g,w,h}=setup($('cvG'));const L=38,R=10,T=8,B=24,FX=50,ZY=1.4,nx=100,ny=70,f0=P.HR/60,C=PAL();
+  const X=f=>L+(w-L-R)*f/FX,Y=v=>h-B-(h-B-T)*v/ZY,cw=(w-L-R)/nx,ch=(h-B-T)/ny;
+  for(let i=0;i<nx;i++)for(let j=0;j<ny;j++){
+    const f=(i+0.5)/nx*FX,zz=(j+0.5)/ny*ZY;let err=0;for(let k=1;k<=10;k++)err=Math.max(err,Math.abs(Hmag(k*f0,f,zz)-1));
+    g.fillStyle=err<=0.05?'rgba(45,212,191,0.45)':err<=0.15?'rgba(251,191,36,0.35)':'rgba(248,113,113,0.18)';
+    g.fillRect(L+i*cw,h-B-(j+1)*ch,cw+0.6,ch+0.6);
+  }
+  g.fillStyle=C.txt;g.textAlign='center';for(let f=0;f<=FX;f+=10)g.fillText(f+' Hz',X(f),h-7);
+  g.textAlign='right';for(let v=0;v<=ZY+1e-9;v+=0.2)g.fillText(fmt(v,1),L-5,Y(v)+4);
+  g.strokeStyle=C.frame;g.strokeRect(L,T,w-L-R,h-B-T);
+  g.fillStyle=C.ink;g.textAlign='left';g.fillText('ζ',L+6,T+14);g.textAlign='right';g.fillText('fn →',w-R-6,h-B-6);
+  const px=X(Math.min(P.fn,FX)),py=Y(Math.min(P.z,ZY));
+  g.beginPath();g.arc(px,py,6,0,7);g.fillStyle=C.dot;g.fill();g.strokeStyle=C.dotS;g.lineWidth=2;g.stroke();
+  if(estimate){const ex=X(Math.min(estimate.fn,FX)),ey=Y(clamp(estimate.z,0,ZY));g.beginPath();g.arc(ex,ey,9,0,7);g.strokeStyle=C.peak;g.lineWidth=2.5;g.stroke();}
+}
+
+// ================= PARAMETRI → UI =================
+function onParams(){
+  P.R=fromSlider('R');P.L=fromSlider('L');P.C=fromSlider('C');
+  const HR=+$('HR').value; if(HR!==P.HR){P.HR=HR;shape=makeArterial(60/HR);}
+  P.Ps=+$('Ps').value;P.Pd=+$('Pd').value;if(P.Pd>P.Ps-10){P.Pd=P.Ps-10;$('Pd').value=P.Pd;}
+  $('vR').textContent=fmt3(P.R);$('vL').textContent=fmt3(P.L);$('vC').textContent=fmt3(P.C);
+  $('vHR').textContent=P.HR+' bpm';$('vPs').textContent=P.Ps+' mmHg';$('vPd').textContent=P.Pd+' mmHg';
+  const C=P.C*1e-3;P.fn=1/(2*Math.PI*Math.sqrt(P.L*C));P.z=P.R/2*Math.sqrt(C/P.L);
+  const z=P.z,pk=z<0.707?1/(2*z*Math.sqrt(1-z*z)):1;
+  $('sFn').textContent=fmt(P.fn,1)+' Hz';$('sZ').textContent=fmt(z,2);
+  $('sPk').textContent=z<0.707?'×'+fmt(pk,2):tr('nessuno');
+  let reg,col,msg;
+  if(z<0.45){reg='Sottosmorzato';col='#fbbf24';msg='Oscillazioni (ringing): sistolica sovrastimata, diastolica sottostimata. Tipico di cateteri lunghi o rigidi e di raccordi multipli.';}
+  else if(z<=0.8){reg='Smorzamento ottimale';col='#2dd4bf';msg='Ampiezza piatta fino a frequenze elevate e fase quasi lineare: l\'onda viene riprodotta fedelmente.';}
+  else if(z<1){reg='Sovrasmorzato';col='#f87171';msg='Onda smussata: sistolica sottostimata, diastolica sovrastimata, incisura dicrota persa.';}
+  else{reg='Sovrasmorzato (aperiodico)';col='#f87171';msg='Nessuna oscillazione e forte attenuazione: la media resta corretta ma la differenziale si comprime.';}
+  msg=tr(msg);
+  if(P.fn<10*P.HR/60)msg+=tr(' Attenzione: fn è sotto la 10ª armonica della FC ({0} Hz).',fmt(P.HR/6,1));
+  if(isPA()&&z>=0.8)msg+=tr(' Sulla curva di arteria polmonare uno smorzamento eccessivo può simulare un incuneamento (pseudo-wedge).');
+  if(isLight())col={'#fbbf24':'#b45309','#2dd4bf':'#0f766e','#f87171':'#b91c1c'}[col];
+  $('sReg').textContent=tr(reg);$('sReg').style.background=col+'26';$('sReg').style.color=col;$('sMsg').textContent=msg;
+  $('monLab').textContent=(isPA()?'PAP':'ART')+' · mmHg';
+  $('legReal').textContent=tr(isPA()?'Pressione arteriosa polmonare reale':'Pressione arteriosa reale');
+  drawBode();drawGardner();
+}
+['R','L','C','HR','Ps','Pd'].forEach(id=>$(id).addEventListener('input',onParams));
+document.querySelectorAll('#speed button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#speed button').forEach(x=>x.classList.remove('on'));b.classList.add('on');speed=+b.dataset.s;});
+window.addEventListener('resize',()=>{drawBode();drawGardner();drawCapture();});
+
+// ================= LINGUA, TEMA E COLLEGAMENTO CON LO SWAN-GANZ =================
+/* Il file resta autonomo; se aperto dallo Swan-Ganz riceve nella query string:
+   from=swanganz, lang, theme, scen, hr, ps, pd, preset. Lingua e tema usano anche le chiavi localStorage condivise. */
+const SG_FILE='Simulatore Termodiluizione Swan-Ganz_v8.html';
+const SCEN_NAME={sano:'Paziente sano',cardio:'Shock cardiogeno',settico:'Shock settico iperdinamico',it:'Insufficienza tricuspidale severa'};
+const Q=(()=>{try{return new URLSearchParams(location.search);}catch(_){return new URLSearchParams();}})();
+const FROM_SG=Q.get('from')==='swanganz';
+let SCEN_IN=null; // {key,hr,ps,pd} o {exam:true}
+function renderMode(){
+  $('modeHint').textContent=tr(isPA()
+    ?'Catetere di Swan-Ganz: 110 cm, lume distale 7–7,5 F. Inerzia e attrito maggiori di una cannula arteriosa danno una fn più bassa (circa 10 Hz). Le pressioni polmonari sono basse: pochi mmHg di errore cambiano la lettura, e uno smorzamento eccessivo può far sembrare incuneata una curva di arteria polmonare.'
+    :'Cannula arteriosa radiale (20 G) con prolunga corta e rigida: fn più alta (15–20 Hz). Un sistema sottosmorzato sovrastima la sistolica, uno sovrasmorzato la sottostima; la pressione media resta affidabile in entrambi i casi.');
+  renderBadge();
+}
+function renderBadge(){
+  const b=$('scenBadge');if(!SCEN_IN||!isPA()){b.hidden=true;return;}
+  b.hidden=false;
+  b.textContent=SCEN_IN.exam?tr('Scenario Swan-Ganz nascosto (Modalità Esame): PAP standard')
+    :tr('Scenario Swan-Ganz: {0} · PAP {1}/{2} mmHg · FC {3}/min',SCEN_NAME[SCEN_IN.key]?tr(SCEN_NAME[SCEN_IN.key]):SCEN_IN.key,SCEN_IN.ps,SCEN_IN.pd,SCEN_IN.hr);
+}
+function refreshTexts(){
+  applyStatic();
+  $('langSel').value=LANG;
+  if(!(flush&&!flush.done))$('btnFlush').textContent=tr('⚡ Fast flush');else $('btnFlush').textContent=tr('Flush in corso…');
+  $('nReal').textContent=tr('reale {0}/{1} ({2})','—','—','—');$('nErr').textContent='';
+  onParams();renderFlush();renderMode();drawCapture();updateNumerics();
+}
+function setLang(l,save){
+  LANG=LANGS.includes(l)?l:'it';
+  if(save){try{localStorage.setItem('swanGanzLingua',LANG);}catch(_){}}
+  refreshTexts();
+}
+function setTheme(light,save){
+  document.body.classList.toggle('light-theme',!!light);
+  if(save){try{localStorage.setItem('swanGanzTema',light?'light':'dark');}catch(_){}}
+  $('themeBtn').setAttribute('aria-pressed',!!light);
+  onParams();drawCapture();
+}
+$('langSel').addEventListener('change',e=>setLang(e.target.value,true));
+$('themeBtn').addEventListener('click',()=>setTheme(!isLight(),true));
+window.addEventListener('storage',e=>{
+  if(e.key==='swanGanzLingua'&&LANGS.includes(e.newValue)&&e.newValue!==LANG)setLang(e.newValue,false);
+  if(e.key==='swanGanzTema'&&(e.newValue==='light')!==isLight())setTheme(e.newValue==='light',false);
+});
+// ritorno: chiude la scheda aperta dallo Swan-Ganz; se il browser non lo consente, torna alla fase di posizionamento
+$('backBtn').addEventListener('click',e=>{
+  e.preventDefault();
+  if(history.length>1){history.back();return;}
+  try{window.close();}catch(_){}
+  setTimeout(()=>{location.href=encodeURI(SG_FILE)+'#posizionamento';},250);
+});
+function initFromUrl(){
+  // lingua e tema: URL, poi scelta salvata dallo Swan-Ganz, poi lingua del browser e tema scuro
+  let l0=Q.get('lang'),t0=Q.get('theme');
+  if(!LANGS.includes(l0)){try{l0=localStorage.getItem('swanGanzLingua');}catch(_){l0=null;}}
+  if(!LANGS.includes(l0)){const n=(navigator.language||'it').slice(0,2).toLowerCase();l0=LANGS.includes(n)?n:'en';}
+  if(t0!=='light'&&t0!=='dark'){try{t0=localStorage.getItem('swanGanzTema');}catch(_){t0=null;}}
+  LANG=l0;document.body.classList.toggle('light-theme',t0==='light');$('themeBtn').setAttribute('aria-pressed',t0==='light');
+  // parametri del paziente
+  const num=(k,a,b)=>{const v=parseFloat(Q.get(k));return isFinite(v)?Math.round(clamp(v,a,b)):null;};
+  // sezione: mode=pa|art; dallo Swan-Ganz si apre sempre la sezione polmonare; da solo, quella arteriosa
+  let pre=Q.get('preset')||'';
+  const mode=Q.get('mode')==='pa'||Q.get('mode')==='art'?Q.get('mode'):(FROM_SG||pre.startsWith('pa_'))?'pa':'art';
+  if(mode==='pa'&&PA_ALIAS[pre])pre=PA_ALIAS[pre];
+  if(mode==='art'&&pre.startsWith('pa_'))pre=PRESETS[pre.slice(3)]?pre.slice(3):'std';
+  const M=MODES[mode];
+  const hr=num('hr',40,180),ps=num('ps',M.ps[0],M.ps[1]),pd=num('pd',M.pd[0],M.pd[1]);
+  if(hr!==null)$('HR').value=hr;
+  if(mode==='pa'&&ps!==null&&pd!==null&&pd<ps)URLP={ps,pd}; // senza pressioni (Modalità Esame) resta la PAP standard 25/10
+  setMode(mode,PRESETS[pre]?pre:M.preset);
+  if(FROM_SG){
+    $('backBtn').hidden=false;
+    const sk=Q.get('scen');
+    SCEN_IN=sk==='exam'||!URLP?{exam:true}:{key:sk||'—',ps:URLP.ps,pd:URLP.pd,hr:+$('HR').value};
+  }
+}
+
+// ================= LOOP =================
+let last=performance.now();
+function frame(now){
+  const realDt=Math.min(0.05,(now-last)/1000);last=now;
+  advance(realDt*speed);
+  drawScene(realDt);drawMonitor();
+  if(flush&&!flush.done&&speed>0)drawCapture();
+  numAcc+=realDt;if(numAcc>0.4){numAcc=0;updateNumerics();}
+  requestAnimationFrame(frame);
+}
+// durante il trascinamento di un cursore nessun testo viene selezionato, anche se il puntatore esce dal controllo
+document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('input[type=range]')){document.body.classList.add('dragging');try{window.getSelection().removeAllRanges();}catch(_){}}},true);
+['pointerup','pointercancel','blur'].forEach(ev=>window.addEventListener(ev,()=>document.body.classList.remove('dragging'),true));
+document.addEventListener('selectstart',e=>{if(document.body.classList.contains('dragging'))e.preventDefault();},true);
+
+initFromUrl();
+refreshTexts();
+S.y=P.Pd;S.ua=P.Pd;advance(2.0);drawCapture();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

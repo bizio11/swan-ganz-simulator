@@ -1,0 +1,39 @@
+# Metadati di citazione letti da GitHub ("Cite this repository").
+# Dopo la prima release su Zenodo: togli il cancelletto dalle righe "doi" e "repository-code" e inserisci i valori reali.
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Swan-Ganz Thermodilution and Extravascular Pressure Transducer (RLC) Interactive Simulator"
+abstract: >-
+  Browser-based teaching simulator for pulmonary artery (Swan-Ganz)
+  catheterisation, indicator thermodilution (Stewart-Hamilton), mixed venous
+  oximetry and the Fick principle, and the dynamics of extravascular pressure
+  transducers modelled as a second-order RLC hydraulic-electrical analogue.
+  Interdisciplinary: biomedical engineering, medicine and critical care nursing.
+  Five languages (IT, EN, FR, DE, ES). Educational use only; not a medical device.
+authors:
+  - family-names: "Spera"
+    given-names: "Fabrizio Maria"
+    affiliation: "Independent Researcher"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+version: "1.0.0"
+license: CC-BY-NC-SA-4.0
+# doi: "10.5281/zenodo.XXXXXXX"
+# repository-code: "https://github.com/YOUR-USERNAME/YOUR-REPO"
+keywords:
+  - Swan-Ganz catheter
+  - pulmonary artery catheter
+  - thermodilution
+  - Stewart-Hamilton
+  - cardiac output
+  - mixed venous oxygen saturation
+  - Fick principle
+  - blood pressure transducer
+  - RLC hydraulic model
+  - fast flush test
+  - Gardner chart
+  - NTC thermistor
+  - haemodynamic monitoring
+  - biomedical engineering education
+  - medical education
+  - nursing education
