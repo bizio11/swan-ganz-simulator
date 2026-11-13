@@ -22,11 +22,11 @@ Developed by **Fabrizio Maria Spera** as an interdisciplinary laboratory for **b
 
 > Replace `YOUR-USERNAME` and `YOUR-REPO` with your GitHub username and repository name once GitHub Pages is active (*Settings → Pages → Branch: `main`, folder `/ (root)`*).
 
-* 🖥️ **[Full interdisciplinary simulator (all fields)](https://YOUR-USERNAME.github.io/YOUR-REPO/Simulatore%20Termodiluizione%20Swan-Ganz_v8.html?area=all)**
-* ⚙️ **[Biomedical engineering view](https://YOUR-USERNAME.github.io/YOUR-REPO/Simulatore%20Termodiluizione%20Swan-Ganz_v8.html?area=bio)** — Stewart-Hamilton integration, NTC thermistor and Wheatstone bridge, multiplicative error budget, CSV export
-* 🩺 **[Medicine view](https://YOUR-USERNAME.github.io/YOUR-REPO/Simulatore%20Termodiluizione%20Swan-Ganz_v8.html?area=med)** — haemodynamic diagnosis, Forrester / Stevenson-Nohria profiles, CPO, PAPi, TPG, PVR in Wood units, therapy choice
-* 🏥 **[Critical care nursing view](https://YOUR-USERNAME.github.io/YOUR-REPO/Simulatore%20Termodiluizione%20Swan-Ganz_v8.html?area=inf)** — phlebostatic levelling, hydrostatic offset, atmospheric zeroing, square-wave (fast-flush) test, end-expiratory PAOP reading
-* 🔬 **[Extravascular pressure transducer lab (RLC analogue)](https://YOUR-USERNAME.github.io/YOUR-REPO/trasduttore_RLC_v2.html)** — RK4 solver, Bode magnitude/phase plots, Gardner f<sub>n</sub>–ζ adequacy chart, slow-motion fluid column and strain-gauge diaphragm
+* 🖥️ **[Full interdisciplinary simulator (all fields)](https://YOUR-USERNAME.github.io/YOUR-REPO/?area=all)**
+* ⚙️ **[Biomedical engineering view](https://YOUR-USERNAME.github.io/YOUR-REPO/?area=bio)** — Stewart-Hamilton integration, NTC thermistor and Wheatstone bridge, multiplicative error budget, CSV export
+* 🩺 **[Medicine view](https://YOUR-USERNAME.github.io/YOUR-REPO/?area=med)** — haemodynamic diagnosis, Forrester / Stevenson-Nohria profiles, CPO, PAPi, TPG, PVR in Wood units, therapy choice
+* 🏥 **[Critical care nursing view](https://YOUR-USERNAME.github.io/YOUR-REPO/?area=inf)** — phlebostatic levelling, hydrostatic offset, atmospheric zeroing, square-wave (fast-flush) test, end-expiratory PAOP reading
+* 🔬 **[Extravascular pressure transducer lab (RLC analogue)](https://YOUR-USERNAME.github.io/YOUR-REPO/trasduttore-rlc.html)** — RK4 solver, Bode magnitude/phase plots, Gardner f<sub>n</sub>–ζ adequacy chart, slow-motion fluid column and strain-gauge diaphragm
 
 Both apps work on smartphones and tablets.
 
@@ -43,10 +43,10 @@ Add parameters to the address to open the simulator already set up for a group. 
 
 Examples:
 
-* Physicians: `…/Simulatore%20Termodiluizione%20Swan-Ganz_v8.html?ambito=medicina`
-* Nurses: `…/Simulatore%20Termodiluizione%20Swan-Ganz_v8.html?ambito=infermieristica`
-* Biomedical engineers, advanced features, phase 2: `…/Simulatore%20Termodiluizione%20Swan-Ganz_v8.html?ambito=bioingegneria&avanzate=1#termodiluizione`
-* International colleagues: `…/Simulatore%20Termodiluizione%20Swan-Ganz_v8.html?ambito=completo&lang=en`
+* Physicians: `…/?ambito=medicina`
+* Nurses: `…/?ambito=infermieristica`
+* Biomedical engineers, advanced features, phase 2: `…/?ambito=bioingegneria&avanzate=1#termodiluizione`
+* International colleagues: `…/?ambito=completo&lang=en`
 
 Parameters set in the link are not saved: they apply to that visit only, and the student can still change field from the top bar.
 
@@ -77,7 +77,7 @@ All models run in plain JavaScript in the browser, with no external libraries an
 
 * **Continuous SvO₂ oximetry and Fick principle (`⚡ Advanced`, optional):** fibre-optic reflection spectrophotometry (≈ 660 nm red vs. 805–940 nm near-infrared reference), DO₂, O₂ER, and a side-by-side comparison of thermodilution CO and Fick CO, showing why tricuspid regurgitation distorts the thermal curve but not the oxygen balance.
 
-### 3. Companion module · Extravascular pressure transducer as an RLC circuit (`trasduttore_RLC_v2.html`)
+### 3. Companion module · Extravascular pressure transducer as an RLC circuit (`trasduttore-rlc.html`)
 
 * Solves the second-order equation of the saline-filled catheter and strain-gauge diaphragm with a 4th-order Runge-Kutta scheme, using a "shadow" system without the flush to isolate the free step response of the **fast-flush test**:
 
@@ -101,7 +101,7 @@ All models run in plain JavaScript in the browser, with no external libraries an
 
 * No cookies, no accounts, no analytics and no server-side processing. Preferences (language, theme, field, advanced mode) are stored only in the browser's `localStorage`.
 * Zero external dependencies: no JavaScript or CSS libraries, no web fonts, no requests to third-party servers. Both pages use the device's system fonts and work fully offline.
-* To run it locally, download the two `.html` files into the same folder and open `Simulatore Termodiluizione Swan-Ganz_v8.html` in a browser.
+* To run it locally, download the two `.html` files into the same folder and open `index.html` in a browser.
 
 ---
 
@@ -109,8 +109,8 @@ All models run in plain JavaScript in the browser, with no external libraries an
 
 | File | Content |
 |---|---|
-| `Simulatore Termodiluizione Swan-Ganz_v8.html` | Main simulator: catheter positioning (phase 1) and thermodilution (phase 2) |
-| `trasduttore_RLC_v2.html` | Extravascular pressure transducer lab (RLC analogue) |
+| `index.html` | Main simulator: catheter positioning (phase 1) and thermodilution (phase 2) |
+| `trasduttore-rlc.html` | Extravascular pressure transducer lab (RLC analogue) |
 | `README.md` | This file |
 | `LICENSE.md` | License notice (CC BY-NC-SA 4.0) |
 | `CITATION.cff` | Citation metadata read by GitHub ("Cite this repository") |

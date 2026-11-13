@@ -2,7 +2,7 @@
 
 Copyright © 2026 Fabrizio Maria Spera
 
-This work — the simulators `Simulatore Termodiluizione Swan-Ganz_v8.html` and `trasduttore_RLC_v2.html`, their source code, texts and figures — is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
+This work — the simulators `index.html` (Swan-Ganz thermodilution simulator) and `trasduttore-rlc.html` (pressure transducer RLC lab), their source code, texts and figures — is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
 
 Summary (not a substitute for the license):
 
