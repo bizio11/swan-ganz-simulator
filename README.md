@@ -20,13 +20,11 @@ Developed by **Fabrizio Maria Spera** as an interdisciplinary laboratory for **b
 
 ## 🚀 Live web app (GitHub Pages)
 
-> Replace `YOUR-USERNAME` and `YOUR-REPO` with your GitHub username and repository name once GitHub Pages is active (*Settings → Pages → Branch: `main`, folder `/ (root)`*).
-
-* 🖥️ **[Full interdisciplinary simulator (all fields)](https://YOUR-USERNAME.github.io/YOUR-REPO/?area=all)**
-* ⚙️ **[Biomedical engineering view](https://YOUR-USERNAME.github.io/YOUR-REPO/?area=bio)** — Stewart-Hamilton integration, NTC thermistor and Wheatstone bridge, multiplicative error budget, CSV export
-* 🩺 **[Medicine view](https://YOUR-USERNAME.github.io/YOUR-REPO/?area=med)** — haemodynamic diagnosis, Forrester / Stevenson-Nohria profiles, CPO, PAPi, TPG, PVR in Wood units, therapy choice
-* 🏥 **[Critical care nursing view](https://YOUR-USERNAME.github.io/YOUR-REPO/?area=inf)** — phlebostatic levelling, hydrostatic offset, atmospheric zeroing, square-wave (fast-flush) test, end-expiratory PAOP reading
-* 🔬 **[Extravascular pressure transducer lab (RLC analogue)](https://YOUR-USERNAME.github.io/YOUR-REPO/trasduttore-rlc.html)** — RK4 solver, Bode magnitude/phase plots, Gardner f<sub>n</sub>–ζ adequacy chart, slow-motion fluid column and strain-gauge diaphragm
+* 🖥️ **[Full interdisciplinary simulator (all fields)](https://bizio11.github.io/swan-ganz-simulator/?area=all)**
+* ⚙️ **[Biomedical engineering view](https://bizio11.github.io/swan-ganz-simulator/?area=bio)** — Stewart-Hamilton integration, NTC thermistor and Wheatstone bridge, multiplicative error budget, CSV export
+* 🩺 **[Medicine view](https://bizio11.github.io/swan-ganz-simulator/?area=med)** — haemodynamic diagnosis, Forrester / Stevenson-Nohria profiles, CPO, PAPi, TPG, PVR in Wood units, therapy choice
+* 🏥 **[Critical care nursing view](https://bizio11.github.io/swan-ganz-simulator/?area=inf)** — phlebostatic levelling, hydrostatic offset, atmospheric zeroing, square-wave (fast-flush) test, end-expiratory PAOP reading
+* 🔬 **[Extravascular pressure transducer lab (RLC analogue)](https://bizio11.github.io/swan-ganz-simulator/trasduttore-rlc.html)** — RK4 solver, Bode magnitude/phase plots, Gardner f<sub>n</sub>–ζ adequacy chart, slow-motion fluid column and strain-gauge diaphragm
 
 Both apps work on smartphones and tablets.
 
@@ -43,10 +41,10 @@ Add parameters to the address to open the simulator already set up for a group. 
 
 Examples:
 
-* Physicians: `…/?ambito=medicina`
-* Nurses: `…/?ambito=infermieristica`
-* Biomedical engineers, advanced features, phase 2: `…/?ambito=bioingegneria&avanzate=1#termodiluizione`
-* International colleagues: `…/?ambito=completo&lang=en`
+* Physicians: `https://bizio11.github.io/swan-ganz-simulator/?ambito=medicina`
+* Nurses: `https://bizio11.github.io/swan-ganz-simulator/?ambito=infermieristica`
+* Biomedical engineers, advanced features, phase 2: `https://bizio11.github.io/swan-ganz-simulator/?ambito=bioingegneria&avanzate=1#termodiluizione`
+* International colleagues: `https://bizio11.github.io/swan-ganz-simulator/?ambito=completo&lang=en`
 
 Parameters set in the link are not saved: they apply to that visit only, and the student can still change field from the top bar.
 
