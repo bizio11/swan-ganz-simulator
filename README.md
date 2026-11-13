@@ -1,6 +1,6 @@
 # Swan-Ganz Thermodilution & Extravascular Pressure Transducer (RLC) Simulator
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24209625.svg)](https://doi.org/10.5281/zenodo.24209625)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-blue.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#-privacy-and-offline-use)
 [![Languages](https://img.shields.io/badge/languages-IT%20%7C%20EN%20%7C%20FR%20%7C%20DE%20%7C%20ES-informational.svg)](#-features-for-teachers-and-students)
@@ -118,9 +118,11 @@ All models run in plain JavaScript in the browser, with no external libraries an
 
 ## 📝 How to cite
 
-If you use the simulator in teaching or research, please cite it. After the first Zenodo release, use the DOI shown in the badge above:
+If you use the simulator in teaching or research, please cite it:
 
-> Spera FM. *Swan-Ganz Thermodilution and Extravascular Pressure Transducer (RLC) Interactive Simulator* [software]. Version 1.0.0. Zenodo; 2026. doi:10.5281/zenodo.XXXXXXX
+> Spera FM. *Swan-Ganz Thermodilution and Extravascular Pressure Transducer (RLC) Interactive Simulator* [software]. Zenodo; 2026. doi:10.5281/zenodo.24209625
+
+This DOI always resolves to the latest version. To cite a specific version, use its own DOI from the Zenodo record (version 1.0.0: [10.5281/zenodo.24209626](https://doi.org/10.5281/zenodo.24209626)).
 
 GitHub also generates the citation automatically from `CITATION.cff` (button **Cite this repository**).
 

@@ -1,5 +1,4 @@
 # Metadati di citazione letti da GitHub ("Cite this repository").
-# Dopo la prima release su Zenodo: togli il cancelletto dalla riga "doi" e inserisci il DOI reale.
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
@@ -18,7 +17,8 @@ authors:
     # orcid: "https://orcid.org/0000-0000-0000-0000"
 version: "1.0.0"
 license: CC-BY-NC-SA-4.0
-# doi: "10.5281/zenodo.XXXXXXX"
+doi: "10.5281/zenodo.24209625"
+date-released: "2026-11-14"
 repository-code: "https://github.com/bizio11/swan-ganz-simulator"
 url: "https://bizio11.github.io/swan-ganz-simulator/"
 keywords:
