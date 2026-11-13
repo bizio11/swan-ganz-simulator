@@ -7,7 +7,7 @@
 
 A free, source-available, browser-based teaching simulator for **pulmonary artery catheterisation (Swan-Ganz)**, **indicator thermodilution (Stewart-Hamilton)**, **mixed venous oximetry (SvO₂ / Fick principle)** and **extravascular pressure transducer dynamics (second-order RLC hydraulic-electrical analogue)**.
 
-Developed by **Fabrizio Maria Spera** as an interdisciplinary laboratory for **biomedical engineering** (thermal and pressure measurements), **medicine** (cardiology and intensive care) and **critical care nursing**.
+Developed by **Fabrizio Maria Spera** ([ORCID 0009-0000-9633-2031](https://orcid.org/0009-0000-9633-2031)) as an interdisciplinary laboratory for **biomedical engineering** (thermal and pressure measurements), **medicine** (cardiology and intensive care) and **critical care nursing**.
 
 > **Educational use only.** This is a mathematical teaching simulator, not a medical device. It must never be used for clinical decisions or patient care.
 

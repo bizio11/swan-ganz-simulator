@@ -4,7 +4,8 @@
   "creators": [
     {
       "name": "Spera, Fabrizio Maria",
-      "affiliation": "Independent Researcher"
+      "affiliation": "Independent Researcher",
+      "orcid": "0009-0000-9633-2031"
     }
   ],
   "description": "<p>Browser-based teaching simulator for pulmonary artery (Swan-Ganz) catheterisation, indicator thermodilution (Stewart-Hamilton), mixed venous oximetry and the Fick principle, and the dynamics of extravascular pressure transducers modelled as a second-order RLC hydraulic-electrical analogue (RK4 solver, Bode plots, Gardner adequacy chart, fast-flush test).</p><p>Designed as an interdisciplinary laboratory for biomedical engineering, medicine and critical care nursing, with field-specific exercises, an exam mode with printable debriefing, and five languages (Italian, English, French, German, Spanish).</p><p><strong>Educational use only.</strong> This software is not a medical device and must not be used for clinical decisions or patient care.</p>",
