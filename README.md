@@ -46,7 +46,7 @@ Examples:
 * Biomedical engineers, advanced features, phase 2: `https://bizio11.github.io/swan-ganz-simulator/?ambito=bioingegneria&avanzate=1#termodiluizione`
 * International colleagues: `https://bizio11.github.io/swan-ganz-simulator/?ambito=completo&lang=en`
 
-Parameters set in the link are not saved: they apply to that visit only, and the student can still change field from the top bar.
+The field chosen on the first visit (or set in the link) is remembered by the browser, so the selection screen appears only once; the student can still change field from the top bar. Advanced mode and language set in the link apply to that visit only.
 
 ---
 
@@ -125,6 +125,14 @@ If you use the simulator in teaching or research, please cite it:
 This DOI always resolves to the latest version. To cite a specific version, use its own DOI from the Zenodo record (version 1.0.0: [10.5281/zenodo.24209626](https://doi.org/10.5281/zenodo.24209626)).
 
 GitHub also generates the citation automatically from `CITATION.cff` (button **Cite this repository**).
+
+---
+
+## ✉️ Contact
+
+For information, requests to use the simulator in a course or institution, or custom interfaces and versions, use the **✉️ Contact** button at the bottom of the [simulator](https://bizio11.github.io/swan-ganz-simulator/#contatti): it opens your email program with the message ready. The address is not published here to limit spam.
+
+Bug reports and suggestions can also be opened as [GitHub issues](https://github.com/bizio11/swan-ganz-simulator/issues).
 
 ---
 

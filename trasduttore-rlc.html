@@ -286,7 +286,7 @@
 </div>
 
 <footer>
-  <span><span data-i="foot">Laboratorio del trasduttore · Simulatore didattico interdisciplinare: medicina, infermieristica, ingegneria biomedica – Sviluppato da Fabrizio Maria Spera</span> · <span data-i="lic">Licenza</span> <a class="lic" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a></span>
+  <span><span data-i="foot">Laboratorio del trasduttore · Simulatore didattico interdisciplinare: medicina, infermieristica, ingegneria biomedica – Sviluppato da Fabrizio Maria Spera</span> · <span data-i="lic">Licenza</span> <a class="lic" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> · <a class="lic" href="index.html#contatti" data-i="ct">✉️ Contatti</a></span>
   <span data-i="disc">Strumento esclusivamente didattico: non è un dispositivo medico e non va usato per decisioni cliniche.</span>
   <details>
     <summary data-i="biblio">Bibliografia essenziale</summary>
@@ -383,6 +383,7 @@ const ROWS=[
 [`@foot`,`Transducer lab · Interdisciplinary teaching simulator: medicine, nursing, biomedical engineering – Developed by Fabrizio Maria Spera`,`Laboratoire du capteur · Simulateur pédagogique interdisciplinaire : médecine, soins infirmiers, génie biomédical – Développé par Fabrizio Maria Spera`,`Druckaufnehmer-Labor · Interdisziplinärer Lehrsimulator: Medizin, Pflege, Biomedizinische Technik – Entwickelt von Fabrizio Maria Spera`,`Laboratorio del transductor · Simulador didáctico interdisciplinar: medicina, enfermería, ingeniería biomédica – Desarrollado por Fabrizio Maria Spera`],
 [`@disc`,`Teaching tool only: it is not a medical device and must not be used for clinical decisions.`,`Outil exclusivement pédagogique : ce n'est pas un dispositif médical et il ne doit pas servir à des décisions cliniques.`,`Ausschließlich Lehrwerkzeug: kein Medizinprodukt und nicht für klinische Entscheidungen bestimmt.`,`Herramienta exclusivamente didáctica: no es un dispositivo médico y no debe usarse para decisiones clínicas.`],
 [`@lic`,`License`,`Licence`,`Lizenz`,`Licencia`],
+[`@ct`,`✉️ Contact`,`✉️ Contact`,`✉️ Kontakt`,`✉️ Contacto`],
 [`@biblio`,`Key references`,`Bibliographie essentielle`,`Wichtigste Literatur`,`Bibliografía esencial`],
 // badge dello scenario ricevuto dallo Swan-Ganz
 [`Scenario Swan-Ganz: {0} · PAP {1}/{2} mmHg · FC {3}/min`,`Swan-Ganz scenario: {0} · PAP {1}/{2} mmHg · HR {3}/min`,`Scénario Swan-Ganz : {0} · PAP {1}/{2} mmHg · FC {3}/min`,`Swan-Ganz-Szenario: {0} · PAP {1}/{2} mmHg · HF {3}/min`,`Escenario Swan-Ganz: {0} · PAP {1}/{2} mmHg · FC {3}/min`],
@@ -942,11 +943,20 @@ window.addEventListener('storage',e=>{
   if(e.key==='swanGanzTema'&&(e.newValue==='light')!==isLight())setTheme(e.newValue==='light',false);
 });
 // ritorno: chiude la scheda aperta dallo Swan-Ganz; se il browser non lo consente, torna alla fase di posizionamento
+// indirizzo di ritorno: ambito, modalità avanzata e fase ricevuti dallo Swan-Ganz, più da=rlc perché lì non riparta il tutorial
+function backUrl(){
+  const p=new URLSearchParams();
+  const a=Q.get('ambito');if(a)p.set('ambito',a);
+  if(Q.get('avanzate')==='1')p.set('avanzate','1');
+  p.set('da','rlc');
+  return encodeURI(SG_FILE)+'?'+p.toString()+(Q.get('fase')==='2'?'#termodiluizione':'#posizionamento');
+}
 $('backBtn').addEventListener('click',e=>{
   e.preventDefault();
+  try{sessionStorage.setItem('swanGanzDaRlc','1');}catch(_){}
   if(history.length>1){history.back();return;}
   try{window.close();}catch(_){}
-  setTimeout(()=>{location.href=encodeURI(SG_FILE)+'#posizionamento';},250);
+  setTimeout(()=>{location.href=backUrl();},250);
 });
 function initFromUrl(){
   // lingua e tema: URL, poi scelta salvata dallo Swan-Ganz, poi lingua del browser e tema scuro
@@ -968,7 +978,7 @@ function initFromUrl(){
   if(mode==='pa'&&ps!==null&&pd!==null&&pd<ps)URLP={ps,pd}; // senza pressioni (Modalità Esame) resta la PAP standard 25/10
   setMode(mode,PRESETS[pre]?pre:M.preset);
   if(FROM_SG){
-    $('backBtn').hidden=false;
+    $('backBtn').hidden=false;$('backBtn').href=backUrl();
     const sk=Q.get('scen');
     SCEN_IN=sk==='exam'||!URLP?{exam:true}:{key:sk||'—',ps:URLP.ps,pd:URLP.pd,hr:+$('HR').value};
   }

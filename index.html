@@ -350,6 +350,15 @@ details.legendbox .legendgrid{padding:10px}
 .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
 .foot .btn{padding:5px 12px;font-size:12.5px}
 .foot a.lic{color:inherit;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
+/* contatti */
+.ctform{display:flex;flex-direction:column;gap:10px}
+.ctrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ctform input[type=text],.ctform textarea{font:inherit;color:inherit;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:7px 9px;width:100%;box-sizing:border-box}
+.ctform textarea{resize:vertical;min-height:110px;line-height:1.45}
+.ctaddr{font-family:var(--font-mono);color:var(--text);user-select:all;-webkit-user-select:all;word-break:break-all}
+#ctOverlay .hint a{color:var(--curve)}
+@media (max-width:560px){.ctrow{grid-template-columns:1fr}}
+@media (max-width:760px){.ctform input[type=text],.ctform textarea,.ctform select{font-size:16px}}
 .meth{display:flex;flex-direction:column;gap:8px;max-width:78ch}
 .meth p{margin:0;font-size:13.5px}
 .meth .eq{font-family:var(--font-mono);font-size:12.5px;background:var(--tile);border:1px solid var(--line);border-radius:4px;padding:8px 10px;overflow-x:auto;white-space:nowrap;line-height:1.7}
@@ -913,8 +922,32 @@ body.area-inf{--ac:var(--ok)} body.area-med{--ac:var(--warn)} body.area-bio{--ac
 
 <footer class="foot">
   <span><span data-i="foot">Simulatore didattico interdisciplinare: medicina, infermieristica, ingegneria biomedica – Sviluppato da Fabrizio Maria Spera</span> · <span data-i="Licenza">Licenza</span> <a class="lic" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a></span>
-  <button class="btn" id="methBtn" type="button" aria-haspopup="dialog" data-i="methBtn">Modello Matematico e Bibliografia</button>
+  <span class="row"><button class="btn" id="ctBtn" type="button" aria-haspopup="dialog" data-i="ctBtn">✉️ Contatti</button><button class="btn" id="methBtn" type="button" aria-haspopup="dialog" data-i="methBtn">Modello Matematico e Bibliografia</button></span>
 </footer>
+
+<div class="overlay" id="ctOverlay" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="ctTitle">
+  <h2 id="ctTitle" data-i="ctTitle">Contatti</h2>
+  <p class="hint" data-i="ctIntro">Informazioni, richieste d'uso per corsi e istituzioni, interfacce o versioni personalizzate, segnalazioni di errori: compila il modulo e premi Invia. Si aprirà il tuo programma di posta con il messaggio già pronto.</p>
+  <form id="ctForm" class="ctform" novalidate>
+    <div class="field"><label for="ctType" data-i="ctType">Tipo di richiesta</label>
+      <select id="ctType">
+        <option value="info" data-i="ctT_info">Informazioni</option>
+        <option value="uso" data-i="ctT_uso">Uso in un corso o in un'istituzione</option>
+        <option value="custom" data-i="ctT_custom">Interfaccia o versione personalizzata</option>
+        <option value="bug" data-i="ctT_bug">Segnalazione di un errore</option>
+        <option value="altro" data-i="ctT_altro">Altro</option>
+      </select></div>
+    <div class="ctrow">
+      <div class="field"><label for="ctName" data-i="ctName">Nome e cognome</label><input id="ctName" type="text" autocomplete="name" maxlength="120"></div>
+      <div class="field"><label for="ctInst" data-i="ctInst">Istituzione o ruolo (facoltativo)</label><input id="ctInst" type="text" autocomplete="organization" maxlength="160"></div>
+    </div>
+    <div class="field"><label for="ctMsg" data-i="ctMsg">Messaggio</label><textarea id="ctMsg" rows="6" maxlength="1500"></textarea></div>
+    <p class="note" id="ctErr" role="alert" hidden></p>
+    <div class="row"><button class="btn primary" type="submit" data-i="ctSend">✉️ Invia</button><button class="btn" type="button" id="ctCopy" data-i="ctCopy">Copia indirizzo e messaggio</button><button class="btn" type="button" id="ctClose" data-i="close">Chiudi</button></div>
+    <p class="hint" id="ctAddrBox" hidden><span data-i="ctAddrLbl">Indirizzo:</span> <strong id="ctAddr" class="ctaddr"></strong></p>
+  </form>
+  <p class="hint" data-i="ctFoot">Non si apre nessun programma di posta? Usa «Copia indirizzo e messaggio» e incolla tutto nella tua posta web (Gmail, Outlook…). Per errori e suggerimenti pubblici puoi anche aprire una <a href="https://github.com/bizio11/swan-ganz-simulator/issues" target="_blank" rel="noopener">segnalazione su GitHub</a>. Il simulatore non salva né invia dati: il messaggio parte solo dal tuo programma di posta.</p>
+</div></div>
 
 <div class="overlay" id="methOverlay" hidden><div class="dialog wide" role="dialog" aria-modal="true" aria-labelledby="mtTitle">
   <h2 id="mtTitle" data-i="mtTitle">Note metodologiche e modello matematico</h2>
@@ -2447,6 +2480,18 @@ function guideBind(){
     guideTab(n.dataset.gt); n.focus(); e.preventDefault(); });
   $('tourPanel').addEventListener('click', e => { const b = e.target.closest('[data-tour]'); if (!b) return;
     if (b.dataset.tour === 'full') guideTab('start'); else { $('guideOverlay').hidden = true; GUIDE_FIRST = true; AREA.guidePending = true; openArea(); } });
+  // ritorno dal laboratorio RLC (?da=rlc o segnale in sessionStorage): non è un nuovo accesso, niente tutorial
+  window.addEventListener('pageshow', e => { if (e.persisted) { try { sessionStorage.removeItem('swanGanzDaRlc'); } catch (_) {} } });   // ripristino dalla cache: il segnale non serve più
+  let fromRlc = false;
+  try { const q = new URLSearchParams(location.search); if (q.get('da') === 'rlc') { fromRlc = true; q.delete('da'); const s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); } } catch (_) {}
+  try { if (sessionStorage.getItem('swanGanzDaRlc')) { fromRlc = true; sessionStorage.removeItem('swanGanzDaRlc'); } } catch (_) {}
+  if (fromRlc && location.hash !== '#contatti') return;
+  // link …#contatti (anche dal laboratorio RLC): apre i contatti al posto del tutorial
+  if (location.hash === '#contatti') {
+    try { history.replaceState(null, '', location.pathname + location.search + (S.phase === 2 ? '#termodiluizione' : '#posizionamento')); } catch (_) {}
+    if ($('areaOverlay').hidden) openContact(); else AREA.ctPending = true;
+    return;
+  }
   // a ogni accesso: tutorial dell'ambito, dopo la scelta dell'ambito se non è già nel link o salvato
   GUIDE_FIRST = true; if ($('areaOverlay').hidden) openGuide(); else AREA.guidePending = true;   // al primo avvio la guida segue la scelta dell'ambito
 }
@@ -2499,7 +2544,7 @@ function start(data){
   if (!LANGS.includes(l0)) { const n = (navigator.language || 'it').slice(0, 2).toLowerCase(); l0 = LANGS.includes(n) ? n : 'en'; }
   LANG = l0; $('langSel').value = LANG; document.body.classList.toggle('light-theme', t0 === 'light'); $('themeBtn').setAttribute('aria-pressed', t0 === 'light');
   advInit();
-  buildPath(); applyStatic(); buildLegend(); bind(); p1Bind(); areaBind(); advBind(); areaInit(); sync(); guideBind();
+  buildPath(); applyStatic(); buildLegend(); bind(); p1Bind(); areaBind(); advBind(); areaInit(); sync(); contactBind(); guideBind();
   $('langSel').addEventListener('change', e => setLang(e.target.value, true));
   $('themeBtn').addEventListener('click', () => setTheme(!isLight(), true));
   // il riquadro delle impostazioni è chiuso solo sugli schermi stretti
@@ -2852,6 +2897,36 @@ ROWS_GUIDE.push(
 [`Attiva le funzionalità avanzate: ECG, aritmie, pacing, cardioversione, SvO₂ e Fick.`, `Turn on the advanced features: ECG, arrhythmias, pacing, cardioversion, SvO₂ and Fick.`, `Activez les fonctions avancées : ECG, arythmies, stimulation, cardioversion, SvO₂ et Fick.`, `Erweiterte Funktionen einschalten: EKG, Rhythmusstörungen, Stimulation, Kardioversion, SvO₂ und Fick.`, `Activa las funciones avanzadas: ECG, arritmias, estimulación, cardioversión, SvO₂ y Fick.`],
 [`Usa la Modalità Esame e il debriefing stampabile per le esercitazioni con gli studenti.`, `Use Exam Mode and the printable debriefing for practice sessions with students.`, `Utilisez le mode Examen et le débriefing imprimable pour les exercices avec les étudiants.`, `Prüfungsmodus und druckbares Debriefing für Übungen mit Studierenden nutzen.`, `Usa el Modo Examen y el debriefing imprimible para las prácticas con los estudiantes.`]
 );
+ROWS_GUIDE.push(   // contatti
+[`✉️ Contatti`, `✉️ Contact`, `✉️ Contact`, `✉️ Kontakt`, `✉️ Contacto`],
+[`Contatti`, `Contact`, `Contact`, `Kontakt`, `Contacto`],
+[`Informazioni, richieste d'uso per corsi e istituzioni, interfacce o versioni personalizzate, segnalazioni di errori: compila il modulo e premi Invia. Si aprirà il tuo programma di posta con il messaggio già pronto.`, `Information, requests to use the simulator in courses or institutions, custom interfaces or versions, error reports: fill in the form and press Send. Your email program will open with the message ready.`, `Informations, demandes d'utilisation pour des cours ou des établissements, interfaces ou versions personnalisées, signalements d'erreurs : remplissez le formulaire et appuyez sur Envoyer. Votre logiciel de messagerie s'ouvrira avec le message prêt.`, `Informationen, Nutzungsanfragen für Kurse und Einrichtungen, angepasste Oberflächen oder Versionen, Fehlermeldungen: Formular ausfüllen und auf Senden drücken. Ihr E-Mail-Programm öffnet sich mit der fertigen Nachricht.`, `Información, solicitudes de uso para cursos e instituciones, interfaces o versiones personalizadas, avisos de errores: rellena el formulario y pulsa Enviar. Se abrirá tu programa de correo con el mensaje ya preparado.`],
+[`Tipo di richiesta`, `Type of request`, `Type de demande`, `Art der Anfrage`, `Tipo de solicitud`],
+[`Informazioni`, `Information`, `Informations`, `Informationen`, `Información`],
+[`Uso in un corso o in un'istituzione`, `Use in a course or institution`, `Utilisation dans un cours ou un établissement`, `Einsatz in einem Kurs oder einer Einrichtung`, `Uso en un curso o una institución`],
+[`Interfaccia o versione personalizzata`, `Custom interface or version`, `Interface ou version personnalisée`, `Angepasste Oberfläche oder Version`, `Interfaz o versión personalizada`],
+[`Segnalazione di un errore`, `Error report`, `Signalement d'une erreur`, `Fehlermeldung`, `Aviso de un error`],
+[`Altro`, `Other`, `Autre`, `Sonstiges`, `Otro`],
+[`Nome e cognome`, `Full name`, `Nom et prénom`, `Vor- und Nachname`, `Nombre y apellidos`],
+[`Istituzione o ruolo (facoltativo)`, `Institution or role (optional)`, `Établissement ou fonction (facultatif)`, `Einrichtung oder Funktion (optional)`, `Institución o cargo (opcional)`],
+[`Messaggio`, `Message`, `Message`, `Nachricht`, `Mensaje`],
+[`✉️ Invia`, `✉️ Send`, `✉️ Envoyer`, `✉️ Senden`, `✉️ Enviar`],
+[`Copia indirizzo e messaggio`, `Copy address and message`, `Copier l'adresse et le message`, `Adresse und Nachricht kopieren`, `Copiar dirección y mensaje`],
+[`Indirizzo:`, `Address:`, `Adresse :`, `Adresse:`, `Dirección:`],
+[`Non si apre nessun programma di posta? Usa «Copia indirizzo e messaggio» e incolla tutto nella tua posta web (Gmail, Outlook…). Per errori e suggerimenti pubblici puoi anche aprire una <a href="https://github.com/bizio11/swan-ganz-simulator/issues" target="_blank" rel="noopener">segnalazione su GitHub</a>. Il simulatore non salva né invia dati: il messaggio parte solo dal tuo programma di posta.`,
+ `No email program opens? Use “Copy address and message” and paste everything into your webmail (Gmail, Outlook…). For public bug reports and suggestions you can also open an <a href="https://github.com/bizio11/swan-ganz-simulator/issues" target="_blank" rel="noopener">issue on GitHub</a>. The simulator neither stores nor sends any data: the message leaves only from your own email program.`,
+ `Aucun logiciel de messagerie ne s'ouvre ? Utilisez « Copier l'adresse et le message » et collez le tout dans votre messagerie web (Gmail, Outlook…). Pour des signalements et suggestions publics, vous pouvez aussi ouvrir un <a href="https://github.com/bizio11/swan-ganz-simulator/issues" target="_blank" rel="noopener">ticket sur GitHub</a>. Le simulateur n'enregistre ni n'envoie aucune donnée : le message part uniquement de votre messagerie.`,
+ `Es öffnet sich kein E-Mail-Programm? „Adresse und Nachricht kopieren“ verwenden und alles in Ihr Webmail (Gmail, Outlook…) einfügen. Für öffentliche Fehlermeldungen und Vorschläge können Sie auch ein <a href="https://github.com/bizio11/swan-ganz-simulator/issues" target="_blank" rel="noopener">Issue auf GitHub</a> eröffnen. Der Simulator speichert und sendet keine Daten: Die Nachricht wird nur von Ihrem eigenen E-Mail-Programm verschickt.`,
+ `¿No se abre ningún programa de correo? Usa «Copiar dirección y mensaje» y pega todo en tu correo web (Gmail, Outlook…). Para avisos de errores y sugerencias públicas también puedes abrir una <a href="https://github.com/bizio11/swan-ganz-simulator/issues" target="_blank" rel="noopener">incidencia en GitHub</a>. El simulador no guarda ni envía datos: el mensaje sale solo desde tu programa de correo.`],
+[`Nome`, `Name`, `Nom`, `Name`, `Nombre`],
+[`Istituzione o ruolo`, `Institution or role`, `Établissement ou fonction`, `Einrichtung oder Funktion`, `Institución o cargo`],
+[`Ambito`, `Field`, `Domaine`, `Fachbereich`, `Ámbito`],
+[`Lingua`, `Language`, `Langue`, `Sprache`, `Idioma`],
+[`Oggetto`, `Subject`, `Objet`, `Betreff`, `Asunto`],
+[`Scrivi il tuo nome e il messaggio.`, `Please enter your name and a message.`, `Indiquez votre nom et votre message.`, `Bitte Namen und Nachricht eingeben.`, `Escribe tu nombre y el mensaje.`],
+[`Indirizzo e messaggio copiati negli appunti`, `Address and message copied to the clipboard`, `Adresse et message copiés dans le presse-papiers`, `Adresse und Nachricht in die Zwischenablage kopiert`, `Dirección y mensaje copiados al portapapeles`],
+[`Copia non riuscita: copia l'indirizzo mostrato qui sotto`, `Copy failed: copy the address shown below`, `Échec de la copie : copiez l'adresse affichée ci-dessous`, `Kopieren fehlgeschlagen: bitte die unten angezeigte Adresse kopieren`, `No se pudo copiar: copia la dirección que aparece abajo`]
+);
 ROWS_GUIDE.forEach(r => { DICT.en.set(r[0], r[1]); DICT.fr.set(r[0], r[2]); DICT.de.set(r[0], r[3]); DICT.es.set(r[0], r[4]); });
 const sgn = (x, d) => (x > 0.0005 ? '+' : x < -0.0005 ? '−' : '±') + f(Math.abs(x), d);
 const liF = (c, h) => `<li class="${c}">${h}</li>`;
@@ -2885,10 +2960,11 @@ function openArea(){
   o.querySelectorAll('[data-area]').forEach(b => { const on = AREA.chosen && b.dataset.area === AREA.cur; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   (o.querySelector('.area.on') || o.querySelector('.area')).focus();
 }
-function closeArea(){ $('areaOverlay').hidden = true; if (AREA.guidePending) { AREA.guidePending = false; openGuide(); } else $('areaBtn').focus(); }
+function closeArea(){ $('areaOverlay').hidden = true; if (AREA.ctPending) { AREA.ctPending = false; openContact(); } else if (AREA.guidePending) { AREA.guidePending = false; openGuide(); } else $('areaBtn').focus(); }
 function areaInit(){
   let a = null;
   try { const p = new URLSearchParams(location.search), v = (p.get('ambito') || p.get('area') || '').toLowerCase(); if (AREA_ALIAS[v]) a = AREA_ALIAS[v]; } catch (_) {}   // link diretto: ?ambito=infermieristica
+  if (a) { try { localStorage.setItem('swanGanzArea', a); } catch (_) {} }   // anche l'ambito del link viene ricordato: la scelta compare una volta sola
   if (!a) { try { const s = localStorage.getItem('swanGanzArea'); if (AREAS.includes(s)) a = s; } catch (_) {} }
   AREA.cur = a || 'all'; AREA.chosen = !!a; applyAreaClass();
   if (AREA.cur === 'bio') S.bio = true;
@@ -2927,6 +3003,10 @@ function rlcUrl(preset){
   if (S.exam) p.set('scen', 'exam');
   else { const sc = SCEN[S.scen]; p.set('scen', S.scen); p.set('hr', sc.hr); p.set('ps', sc.pas); p.set('pd', sc.pad); }
   p.set('preset', preset);
+  // per il ritorno: ambito, modalità avanzata e fase correnti (il laboratorio li rimanda indietro senza usarli)
+  if (AREA.chosen) p.set('ambito', {inf:'infermieristica', med:'medicina', bio:'bioingegneria', all:'completo'}[AREA.cur || 'all']);
+  if (S.adv) p.set('avanzate', '1');
+  if (S.phase === 2) p.set('fase', '2');
   return RLC_FILE + '?' + p.toString();
 }
 function updateRlcLinks(){
@@ -3364,6 +3444,38 @@ function shareUrl(){
   q.set('ambito', {inf:'infermieristica', med:'medicina', bio:'bioingegneria', all:'completo'}[AREA.cur || 'all']);
   if (S.adv) q.set('avanzate', '1');
   return base + '?' + q.toString() + (S.phase === 2 ? '#termodiluizione' : '#posizionamento');
+}
+/* ----- contatti: l'indirizzo non è scritto nel sorgente; viene ricomposto solo quando una persona clicca ----- */
+const APP_VER = '1.0.0';
+const CT_K = [122,120,116,57,123,126,118,122,112,87,112,121,126,115,126,121,120,126,121,126,103,120];
+const ctAddr = () => CT_K.map(c => String.fromCharCode(c ^ 23)).reverse().join('');
+function ctCompose(){
+  const ty = $('ctType'), type = ty.options[ty.selectedIndex].text, name = $('ctName').value.trim(), inst = $('ctInst').value.trim(), msg = $('ctMsg').value.trim();
+  const subj = '[Simulatore Swan-Ganz] ' + type + (inst ? ' – ' + inst : '');
+  const body = msg + '\n\n—\n' + tr('Nome') + ': ' + name + '\n' + (inst ? tr('Istituzione o ruolo') + ': ' + inst + '\n' : '') +
+    tr('Tipo di richiesta') + ': ' + type + '\n' + tr('Ambito') + ': ' + tr(AREA_NAME[AREA.cur || 'all']) + ' · ' + tr('Lingua') + ': ' + LANG.toUpperCase() + ' · v' + APP_VER;
+  return {name, msg, subj, body};
+}
+function openContact(){ $('ctErr').hidden = true; $('ctOverlay').hidden = false; $('ctType').focus(); }
+function closeContact(){ $('ctOverlay').hidden = true; $('ctBtn').focus(); }
+function contactBind(){
+  $('ctBtn').addEventListener('click', openContact);
+  $('ctOverlay').addEventListener('click', e => { if (e.target.id === 'ctOverlay' || e.target.id === 'ctClose') closeContact(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('ctOverlay').hidden) closeContact(); });
+  window.addEventListener('hashchange', () => { if (location.hash === '#contatti') openContact(); });
+  $('ctForm').addEventListener('input', () => { $('ctErr').hidden = true; });
+  $('ctForm').addEventListener('submit', e => {
+    e.preventDefault(); const c = ctCompose();
+    if (!c.name || !c.msg) { $('ctErr').textContent = tr('Scrivi il tuo nome e il messaggio.'); $('ctErr').hidden = false; (c.name ? $('ctMsg') : $('ctName')).focus(); return; }
+    $('ctErr').hidden = true;
+    location.href = 'mailto:' + ctAddr() + '?subject=' + encodeURIComponent(c.subj) + '&body=' + encodeURIComponent(c.body);
+  });
+  $('ctCopy').addEventListener('click', async () => {
+    const c = ctCompose(), a = ctAddr(); $('ctAddr').textContent = a; $('ctAddrBox').hidden = false;
+    const txt = a + '\n' + tr('Oggetto') + ': ' + c.subj + '\n\n' + c.body;
+    try { await navigator.clipboard.writeText(txt); toast(tr('Indirizzo e messaggio copiati negli appunti')); }
+    catch (_) { toast(tr('Copia non riuscita: copia l\'indirizzo mostrato qui sotto')); }
+  });
 }
 function toast(html){
   let t = $('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
