@@ -1,8 +1,17 @@
 <!DOCTYPE html>
+<!--
+  Simulatore Termodiluizione Swan-Ganz – simulatore didattico interdisciplinare
+  Copyright (c) 2026 Fabrizio Maria Spera (ORCID 0009-0000-9633-2031)
+  Licenza: Creative Commons BY-NC-SA 4.0 – https://creativecommons.org/licenses/by-nc-sa/4.0/
+  Citazione: doi:10.5281/zenodo.24209625 · Sorgente: https://github.com/bizio11/swan-ganz-simulator
+  Strumento esclusivamente didattico: non è un dispositivo medico.
+-->
 <html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Fabrizio Maria Spera">
+<link rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
 <title>Simulatore Termodiluizione Swan-Ganz</title>
 <style>
 :root{
@@ -340,6 +349,7 @@ details.legendbox .legendgrid{padding:10px}
 /* footer, note metodologiche, report */
 .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
 .foot .btn{padding:5px 12px;font-size:12.5px}
+.foot a.lic{color:inherit;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
 .meth{display:flex;flex-direction:column;gap:8px;max-width:78ch}
 .meth p{margin:0;font-size:13.5px}
 .meth .eq{font-family:var(--font-mono);font-size:12.5px;background:var(--tile);border:1px solid var(--line);border-radius:4px;padding:8px 10px;overflow-x:auto;white-space:nowrap;line-height:1.7}
@@ -902,7 +912,7 @@ body.area-inf{--ac:var(--ok)} body.area-med{--ac:var(--warn)} body.area-bio{--ac
 </main>
 
 <footer class="foot">
-  <span data-i="foot">Simulatore didattico interdisciplinare: medicina, infermieristica, ingegneria biomedica – Sviluppato da Fabrizio Maria Spera</span>
+  <span><span data-i="foot">Simulatore didattico interdisciplinare: medicina, infermieristica, ingegneria biomedica – Sviluppato da Fabrizio Maria Spera</span> · <span data-i="Licenza">Licenza</span> <a class="lic" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a></span>
   <button class="btn" id="methBtn" type="button" aria-haspopup="dialog" data-i="methBtn">Modello Matematico e Bibliografia</button>
 </footer>
 
@@ -2059,7 +2069,7 @@ function buildDebrief(){
   <h3>${tr('Fase 1 · Posizionamento del catetere')}</h3>${p1Summary()}
   ${advDebrief()}
   ${areaDebrief()}
-  <p class="repmeta">${tr('Report del {0}', new Date().toLocaleString(LOCALE[LANG], {dateStyle: 'long', timeStyle: 'short'}))} · ${tr('Ambito: {0}', tr(AREA_NAME[AREA.cur || 'all']))} ·${tr('Simulatore didattico interdisciplinare: medicina, infermieristica, ingegneria biomedica – Sviluppato da Fabrizio Maria Spera')}</p>
+  <p class="repmeta">${tr('Report del {0}', new Date().toLocaleString(LOCALE[LANG], {dateStyle: 'long', timeStyle: 'short'}))} · ${tr('Ambito: {0}', tr(AREA_NAME[AREA.cur || 'all']))} ·${tr('Simulatore didattico interdisciplinare: medicina, infermieristica, ingegneria biomedica – Sviluppato da Fabrizio Maria Spera')} · ${tr('Licenza')} CC BY-NC-SA 4.0 · doi:10.5281/zenodo.24209625</p>
   <p class="note noprint" id="printNote" hidden></p>
   <div class="row noprint"><button class="btn primary" id="dbPrint" type="button">${tr('Stampa / Salva PDF')}</button><button class="btn" id="dbSave" type="button" hidden>${tr('Scarica report (HTML)')}</button><button class="btn" id="dbClose" type="button">${tr('Chiudi')}</button></div>`;
 }
@@ -2806,7 +2816,8 @@ const ROWS_GUIDE = [
 [`@g_h_rlc`, `Transducer lab (RLC)`, `Laboratoire du capteur (RLC)`, `Druckaufnehmer-Labor (RLC)`, `Laboratorio del transductor (RLC)`],
 [`@g_rlc`, `A separate simulator shows how catheter, extension lines and transducer distort the pressure curve: fast flush, Bode plots and Gardner chart, in the Swan-Ganz or the arterial section. It opens from the square-wave test (nursing), the RLC card (biomedical engineering) or the methodological notes, and receives scenario, language and theme.`, `Un simulateur séparé montre comment cathéter, prolongateurs et capteur déforment la courbe de pression : fast flush, diagrammes de Bode et abaque de Gardner, dans la section Swan-Ganz ou artérielle. Il s'ouvre depuis le test de l'onde carrée (soins infirmiers), la carte RLC (génie biomédical) ou les notes méthodologiques, et reçoit scénario, langue et thème.`, `Ein separater Simulator zeigt, wie Katheter, Verlängerungen und Druckaufnehmer die Druckkurve verformen: Fast Flush, Bode-Diagramme und Gardner-Diagramm, im Swan-Ganz- oder im arteriellen Abschnitt. Er öffnet sich über den Rechtecktest (Pflege), die RLC-Karte (Biomedizinische Technik) oder die methodischen Hinweise und übernimmt Szenario, Sprache und Design.`, `Un simulador aparte muestra cómo el catéter, las alargaderas y el transductor deforman la curva de presión: fast flush, diagramas de Bode y diagrama de Gardner, en la sección Swan-Ganz o en la arterial. Se abre desde la prueba de onda cuadrada (enfermería), la tarjeta RLC (ingeniería biomédica) o las notas metodológicas, y recibe escenario, idioma y tema.`],
 [`@g_h_link`, `Sharing the simulator`, `Partager le simulateur`, `Den Simulator teilen`, `Compartir el simulador`],
-[`@g_link`, `The 🔗 button creates a link that opens the current field, mode and phase directly; the language stays that of the recipient's browser. The parameters can also be typed by hand: <code>?ambito=medicina</code>, <code>&amp;avanzate=1</code>, <code>#termodiluizione</code>, <code>&amp;lang=en</code>.`, `Le bouton 🔗 crée un lien qui ouvre directement le domaine, le mode et la phase actuels ; la langue reste celle du navigateur du destinataire. Les paramètres peuvent aussi être saisis à la main : <code>?ambito=medicina</code>, <code>&amp;avanzate=1</code>, <code>#termodiluizione</code>, <code>&amp;lang=fr</code>.`, `Die Schaltfläche 🔗 erzeugt einen Link, der Fachbereich, Modus und Phase direkt öffnet; die Sprache bleibt die des Browsers des Empfängers. Die Parameter lassen sich auch von Hand eingeben: <code>?ambito=medicina</code>, <code>&amp;avanzate=1</code>, <code>#termodiluizione</code>, <code>&amp;lang=de</code>.`, `El botón 🔗 crea un enlace que abre directamente el ámbito, el modo y la fase actuales; el idioma sigue siendo el del navegador de quien lo abre. Los parámetros también se pueden escribir a mano: <code>?ambito=medicina</code>, <code>&amp;avanzate=1</code>, <code>#termodiluizione</code>, <code>&amp;lang=es</code>.`]
+[`@g_link`, `The 🔗 button creates a link that opens the current field, mode and phase directly; the language stays that of the recipient's browser. The parameters can also be typed by hand: <code>?ambito=medicina</code>, <code>&amp;avanzate=1</code>, <code>#termodiluizione</code>, <code>&amp;lang=en</code>.`, `Le bouton 🔗 crée un lien qui ouvre directement le domaine, le mode et la phase actuels ; la langue reste celle du navigateur du destinataire. Les paramètres peuvent aussi être saisis à la main : <code>?ambito=medicina</code>, <code>&amp;avanzate=1</code>, <code>#termodiluizione</code>, <code>&amp;lang=fr</code>.`, `Die Schaltfläche 🔗 erzeugt einen Link, der Fachbereich, Modus und Phase direkt öffnet; die Sprache bleibt die des Browsers des Empfängers. Die Parameter lassen sich auch von Hand eingeben: <code>?ambito=medicina</code>, <code>&amp;avanzate=1</code>, <code>#termodiluizione</code>, <code>&amp;lang=de</code>.`, `El botón 🔗 crea un enlace que abre directamente el ámbito, el modo y la fase actuales; el idioma sigue siendo el del navegador de quien lo abre. Los parámetros también se pueden escribir a mano: <code>?ambito=medicina</code>, <code>&amp;avanzate=1</code>, <code>#termodiluizione</code>, <code>&amp;lang=es</code>.`],
+[`Licenza`, `License`, `Licence`, `Lizenz`, `Licencia`]
 ];
 ROWS_GUIDE.push(
 [`@gt_tour`, `Your path`, `Votre parcours`, `Ihr Lernweg`, `Tu recorrido`],
